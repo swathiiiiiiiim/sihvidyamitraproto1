@@ -597,7 +597,7 @@ function Login({
                   className={selectedClass === x ? "choice selected" : "choice"}
                   key={x}
                   onClick={() => setClass(x)}
-                >
+                >0
                   <span>Class</span>
                   <strong>{x.replace("th", "")}</strong>
                   <small>
