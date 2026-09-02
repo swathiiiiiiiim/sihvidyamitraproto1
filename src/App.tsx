@@ -521,9 +521,24 @@ function Login({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [step, setStep] = useState(1);
+  const [selectedClass, setClass] = useState("");
+  const [language, setLanguage] = useState("");
+  const [style, setStyle] = useState("");
+  const [building, setBuilding] = useState(false);
+
+  const onBuild = () => {
+    setBuilding(true);
+
+    setTimeout(() => {
+      setBuilding(false);
+      onContinue();
+    }, 1500);
+  };
+
   const handleAuth = async () => {
     setError("");
-     if (!email || !password) {
+    if (!email || !password) {
       setError("Please enter your email and password.");
       return;
     }
@@ -580,114 +595,101 @@ function Login({
             <br />
             <span>Better tomorrow.</span>
           </h2>
-          <p>
-            A learning companion that grows with you not ahead of you.
-            </p>
-            <div>
-              <div className= "auth-bottom">
-                <span>01</span>
-                <div className= "auth-progress">
-                <i/>
-                </div>
-                <span>03</span>
-                </div>
-                </div>
-              {["8th", "9th", "10th", "11th", "12th"].map((x) => (
-                <button
-                  className={selectedClass === x ? "choice selected" : "choice"}
-                  key={x}
-                  onClick={() => setClass(x)}
-                >0
-                  <span>Class</span>
-                  <strong>{x.replace("th", "")}</strong>
-                  <small>
-                    {x === "10th" ? "Board year" : "Keep exploring"}
-                  </small>
-                </button>
-              ))}
+          <p>A learning companion that grows with you not ahead of you.</p>
+          <div>
+            <div className="auth-bottom">
+              <span>01</span>
+              <div className="auth-progress">
+                <i />
+              </div>
+              <span>03</span>
             </div>
-          { step === 2 && (
-            <div className="choice-grid">
-              {languages.map((x) => (
+          </div>
+          {["8th", "9th", "10th", "11th", "12th"].map((x) => (
+            <button
+              className={selectedClass === x ? "choice selected" : "choice"}
+              key={x}
+              onClick={() => setClass(x)}
+            >
+              0<span>Class</span>
+              <strong>{x.replace("th", "")}</strong>
+              <small>{x === "10th" ? "Board year" : "Keep exploring"}</small>
+            </button>
+          ))}
+        </div>
+        {step === 2 && (
+          <div className="choice-grid">
+            {languages.map((x) => (
+              <button
+                className={
+                  language === x ? "choice selected" : "choice language-choice"
+                }
+                key={x}
+                onClick={() => setLanguage(x)}
+              >
+                <span className="language-dot">{x.slice(0, 1)}</span>
+                <strong>{x}</strong>
+                <small>
+                  {x === "Hinglish" ? "Best of both worlds" : `Learn in ${x}`}
+                </small>
+              </button>
+            ))}
+          </div>
+        )}
+        {step === 3 && (
+          <div className="style-grid">
+            {styles.map((x, i) => {
+              const Icon = [BookOpen, Headphones, ImageIcon, Target, Sparkles][
+                i
+              ];
+              return (
                 <button
-                  className={
-                    language === x
-                      ? "choice selected"
-                      : "choice language-choice"
-                  }
+                  className={style === x ? "style-card selected" : "style-card"}
                   key={x}
-                  onClick={() => setLanguage(x)}
+                  onClick={() => setStyle(x)}
                 >
-                  <span className="language-dot">{x.slice(0, 1)}</span>
+                  <span>
+                    <Icon size={22} />
+                  </span>
                   <strong>{x}</strong>
                   <small>
-                    {x === "Hinglish" ? "Best of both worlds" : `Learn in ${x}`}
+                    {
+                      [
+                        "I like to read and reflect",
+                        "Listen and learn on the go",
+                        "See it come to life",
+                        "Learn by doing",
+                        "A little bit of everything",
+                      ][i]
+                    }
                   </small>
                 </button>
-              ))}
-            </div>
-          )}
-          {step === 3 && (
-            <div className="style-grid">
-              {styles.map((x, i) => {
-                const Icon = [
-                  BookOpen,
-                  Headphones,
-                  ImageIcon,
-                  Target,
-                  Sparkles,
-                ][i];
-                return (
-                  <button
-                    className={
-                      style === x ? "style-card selected" : "style-card"
-                    }
-                    key={x}
-                    onClick={() => setStyle(x)}
-                  >
-                    <span>
-                      <Icon size={22} />
-                    </span>
-                    <strong>{x}</strong>
-                    <small>
-                      {
-                        [
-                          "I like to read and reflect",
-                          "Listen and learn on the go",
-                          "See it come to life",
-                          "Learn by doing",
-                          "A little bit of everything",
-                        ][i]
-                      }
-                    </small>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          <div className="onboard-actions">
-            {step > 1 && (
-              <button className="text-btn" onClick={() => setStep(step - 1)}>
-                Back
-              </button>
-            )}
-            {step < 3 ? (
-              <button className="primary-btn" onClick={() => setStep(step + 1)}>
-                Continue <ArrowRight size={18} />
-              </button>
-            ) : (
-              <button
-                className="primary-btn"
-                onClick={onBuild}
-                disabled={building}
-              >
-                {building
-                  ? "Analyzing your preferences…"
-                  : "Build my learning path"}{" "}
-                <ArrowRight size={18} />
-              </button>
-            )}
+              );
+            })}
           </div>
+        )}
+        <div className="onboard-actions">
+          {step > 1 && (
+            <button className="text-btn" onClick={() => setStep(step - 1)}>
+              Back
+            </button>
+          )}
+          {step < 3 ? (
+            <button className="primary-btn" onClick={() => setStep(step + 1)}>
+              Continue <ArrowRight size={18} />
+            </button>
+          ) : (
+            <button
+              className="primary-btn"
+              onClick={onBuild}
+              disabled={building}
+            >
+              {building
+                ? "Analyzing your preferences…"
+                : "Build my learning path"}{" "}
+              <ArrowRight size={18} />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -2212,6 +2214,105 @@ function TopicModal({
           <ArrowRight size={17} />
         </button>
       </div>
+    </div>
+  );
+}
+function Onboarding({
+  step,
+  setStep,
+  selectedClass,
+  setClass,
+  language,
+  setLanguage,
+  style,
+  setStyle,
+  building,
+  onBuild,
+}: {
+  step: number;
+  setStep: (step: number) => void;
+  selectedClass: string;
+  setClass: (value: string) => void;
+  language: Language;
+  setLanguage: React.Dispatch<React.SetStateAction<Language>>;
+  style: Style;
+  setStyle: React.Dispatch<React.SetStateAction<Style>>;
+  building: boolean;
+  onBuild: () => void;
+}) {
+  return (
+    <div className="onboarding">
+      <h1>Build Your Learning Path</h1>
+
+      {step === 1 && (
+        <div>
+          <h2>Select your class</h2>
+
+          {["8th", "9th", "10th", "11th", "12th"].map((x) => (
+            <button
+              key={x}
+              onClick={() => {
+                setClass(x);
+                setStep(2);
+              }}
+            >
+              Class {x}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {step === 2 && (
+        <div>
+          <h2>Choose your language</h2>
+
+          {(["English", "Kannada", "Hindi"] as Language[]).map((x) => (
+            <button
+              key={x}
+              onClick={() => {
+                setLanguage(x);
+                setStep(3);
+              }}
+            >
+              {x}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {step === 3 && (
+        <div>
+          <h2>Choose your learning style</h2>
+
+          {(["Visual", "Practice", "Balanced"] as Style[]).map((x) => (
+            <button
+              key={x}
+              onClick={() => {
+                setStyle(x);
+                setStep(4);
+              }}
+            >
+              {x}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {step === 4 && (
+        <div>
+          <h2>Ready to build your path?</h2>
+
+          <p>Class: {selectedClass}</p>
+          <p>Language: {language}</p>
+          <p>Style: {style}</p>
+
+          <button className="primary-btn" onClick={onBuild} disabled={building}>
+            {building
+              ? "Analyzing your preferences..."
+              : "Build my learning path"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
