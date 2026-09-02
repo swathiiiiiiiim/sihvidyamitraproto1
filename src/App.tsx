@@ -1,14 +1,65 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import {
-  ArrowRight, Award, BarChart3, Bell, BookOpen, BrainCircuit, CalendarDays, Check,
-  ChevronRight, CircleHelp, Clock3, FileText, Flame, Headphones, Image as ImageIcon,
-  Lightbulb, LockKeyhole, LogOut, Menu, MessageCircle, Mic, Moon, Play, RotateCcw,
-  Send, Settings as SettingsIcon, Sparkles, Target, TrendingUp, Upload, Volume2, X, Zap,
-} from 'lucide-react';
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
+import { supabase } from "./lib1/supabase";
+import {
+  ArrowRight,
+  Award,
+  BarChart3,
+  Bell,
+  BookOpen,
+  BrainCircuit,
+  CalendarDays,
+  Check,
+  ChevronRight,
+  CircleHelp,
+  Clock3,
+  FileText,
+  Flame,
+  Headphones,
+  Image as ImageIcon,
+  Lightbulb,
+  LockKeyhole,
+  LogOut,
+  Menu,
+  MessageCircle,
+  Mic,
+  Moon,
+  Play,
+  RotateCcw,
+  Send,
+  Settings as SettingsIcon,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Upload,
+  Volume2,
+  X,
+  Zap,
+} from "lucide-react";
 
-type Page = 'home' | 'path' | 'gaps' | 'practice' | 'tutor' | 'revision' | 'progress' | 'settings';
-type Language = 'English' | 'Hindi' | 'Kannada' | 'Tamil' | 'Telugu' | 'Hinglish';
-type Style = 'Reading' | 'Listening' | 'Visual' | 'Practice' | 'Mixed';
+type Page =
+  | "home"
+  | "path"
+  | "gaps"
+  | "practice"
+  | "tutor"
+  | "revision"
+  | "progress"
+  | "settings";
+type Language =
+  | "English"
+  | "Hindi"
+  | "Kannada"
+  | "Tamil"
+  | "Telugu"
+  | "Hinglish";
+type Style = "Reading" | "Listening" | "Visual" | "Practice" | "Mixed";
 type Topic = { name: string; mastery: number; status: string; note?: string };
 type Toast = { id: number; message: string };
 
@@ -20,7 +71,7 @@ type AppData = {
   mistakes: number;
   revisionQueue: string[];
   drillQuestion: number;
-  drillDifficulty: 'Easy' | 'Medium' | 'Hard';
+  drillDifficulty: "Easy" | "Medium" | "Hard";
   drillScore: number;
   completedTopics: string[];
   learningGaps: string[];
@@ -28,110 +79,2141 @@ type AppData = {
 };
 
 const initialData: AppData = {
-  selectedClass: '10th', selectedLanguage: 'English', selectedLearningStyle: 'Mixed', mastery: 74,
-  mistakes: 4, revisionQueue: ['Discriminant', 'Quadratic Equations', 'Factorisation', 'Polynomials'],
-  drillQuestion: 0, drillDifficulty: 'Medium', drillScore: 0, completedTopics: ['Real Numbers', 'Polynomials'],
-  learningGaps: ['Discriminant', 'Applications'], attempted: 42,
+  selectedClass: "10th",
+  selectedLanguage: "English",
+  selectedLearningStyle: "Mixed",
+  mastery: 74,
+  mistakes: 4,
+  revisionQueue: [
+    "Discriminant",
+    "Quadratic Equations",
+    "Factorisation",
+    "Polynomials",
+  ],
+  drillQuestion: 0,
+  drillDifficulty: "Medium",
+  drillScore: 0,
+  completedTopics: ["Real Numbers", "Polynomials"],
+  learningGaps: ["Discriminant", "Applications"],
+  attempted: 42,
 };
 
 const topics: Topic[] = [
-  { name: 'Real Numbers', mastery: 94, status: 'Mastered' },
-  { name: 'Polynomials', mastery: 88, status: 'Strong' },
-  { name: 'Quadratic Equations', mastery: 62, status: 'Developing' },
-  { name: 'Discriminant', mastery: 41, status: 'Learning', note: 'Learning gap' },
-  { name: 'Applications', mastery: 35, status: 'Not Started', note: 'Blocked by prerequisite' },
+  { name: "Real Numbers", mastery: 94, status: "Mastered" },
+  { name: "Polynomials", mastery: 88, status: "Strong" },
+  { name: "Quadratic Equations", mastery: 62, status: "Developing" },
+  {
+    name: "Discriminant",
+    mastery: 41,
+    status: "Learning",
+    note: "Learning gap",
+  },
+  {
+    name: "Applications",
+    mastery: 35,
+    status: "Not Started",
+    note: "Blocked by prerequisite",
+  },
 ];
-const languages: Language[] = ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Hinglish'];
-const styles: Style[] = ['Reading', 'Listening', 'Visual', 'Practice', 'Mixed'];
+const languages: Language[] = [
+  "English",
+  "Hindi",
+  "Kannada",
+  "Tamil",
+  "Telugu",
+  "Hinglish",
+];
+const styles: Style[] = ["Reading", "Listening", "Visual", "Practice", "Mixed"];
 const nav = [
-  { id: 'home' as Page, label: 'Home', icon: BarChart3 }, { id: 'path' as Page, label: 'Learning Path', icon: Target },
-  { id: 'gaps' as Page, label: 'Gap Detection', icon: BrainCircuit }, { id: 'practice' as Page, label: 'Practice', icon: Zap },
-  { id: 'tutor' as Page, label: 'AI Tutor', icon: MessageCircle }, { id: 'revision' as Page, label: 'Smart Revision', icon: RotateCcw },
-  { id: 'progress' as Page, label: 'Progress', icon: TrendingUp }, { id: 'settings' as Page, label: 'Settings', icon: SettingsIcon },
+  { id: "home" as Page, label: "Home", icon: BarChart3 },
+  { id: "path" as Page, label: "Learning Path", icon: Target },
+  { id: "gaps" as Page, label: "Gap Detection", icon: BrainCircuit },
+  { id: "practice" as Page, label: "Practice", icon: Zap },
+  { id: "tutor" as Page, label: "AI Tutor", icon: MessageCircle },
+  { id: "revision" as Page, label: "Smart Revision", icon: RotateCcw },
+  { id: "progress" as Page, label: "Progress", icon: TrendingUp },
+  { id: "settings" as Page, label: "Settings", icon: SettingsIcon },
 ];
 const questions = [
-  { prompt: 'For the quadratic equation ax² + bx + c = 0, what does the discriminant determine?', options: ['Sum of roots', 'Nature of roots', 'Product of roots', 'Value of x'], answer: 1, explain: 'The discriminant, b² − 4ac, tells us whether roots are real, equal or distinct.' },
-  { prompt: 'If D = b² − 4ac is greater than 0, the equation has:', options: ['No real roots', 'Equal roots', 'Two distinct real roots', 'One imaginary root'], answer: 2, explain: 'A positive discriminant means the graph crosses the x-axis twice.' },
-  { prompt: 'Find the discriminant of x² + 4x + 4 = 0.', options: ['0', '4', '8', '16'], answer: 0, explain: 'D = 4² − 4(1)(4) = 16 − 16 = 0, so the roots are equal.' },
-  { prompt: 'A quadratic equation with D < 0 has:', options: ['Two equal roots', 'Two distinct real roots', 'No real roots', 'A root equal to zero'], answer: 2, explain: 'A negative discriminant means the parabola does not meet the real x-axis.' },
-  { prompt: 'For x² − 5x + 6 = 0, the value of D is:', options: ['1', '5', '11', '25'], answer: 0, explain: 'D = (−5)² − 4(1)(6) = 25 − 24 = 1.' },
+  {
+    prompt:
+      "For the quadratic equation ax² + bx + c = 0, what does the discriminant determine?",
+    options: [
+      "Sum of roots",
+      "Nature of roots",
+      "Product of roots",
+      "Value of x",
+    ],
+    answer: 1,
+    explain:
+      "The discriminant, b² − 4ac, tells us whether roots are real, equal or distinct.",
+  },
+  {
+    prompt: "If D = b² − 4ac is greater than 0, the equation has:",
+    options: [
+      "No real roots",
+      "Equal roots",
+      "Two distinct real roots",
+      "One imaginary root",
+    ],
+    answer: 2,
+    explain:
+      "A positive discriminant means the graph crosses the x-axis twice.",
+  },
+  {
+    prompt: "Find the discriminant of x² + 4x + 4 = 0.",
+    options: ["0", "4", "8", "16"],
+    answer: 0,
+    explain: "D = 4² − 4(1)(4) = 16 − 16 = 0, so the roots are equal.",
+  },
+  {
+    prompt: "A quadratic equation with D < 0 has:",
+    options: [
+      "Two equal roots",
+      "Two distinct real roots",
+      "No real roots",
+      "A root equal to zero",
+    ],
+    answer: 2,
+    explain:
+      "A negative discriminant means the parabola does not meet the real x-axis.",
+  },
+  {
+    prompt: "For x² − 5x + 6 = 0, the value of D is:",
+    options: ["1", "5", "11", "25"],
+    answer: 0,
+    explain: "D = (−5)² − 4(1)(6) = 25 − 24 = 1.",
+  },
 ];
 
 function loadData(): AppData {
-  try { return { ...initialData, ...JSON.parse(localStorage.getItem('vidyamitra-demo') || '{}') }; } catch { return initialData; }
+  try {
+    return {
+      ...initialData,
+      ...JSON.parse(localStorage.getItem("vidyamitra-demo") || "{}"),
+    };
+  } catch {
+    return initialData;
+  }
 }
 
 function App() {
   const [data, setData] = useState<AppData>(loadData);
-  const [page, setPage] = useState<Page>(() => (localStorage.getItem('vidyamitra-auth') ? 'home' : 'home'));
-  const [screen, setScreen] = useState<'welcome' | 'login' | 'onboarding' | 'app'>(() => (localStorage.getItem('vidyamitra-auth') ? 'app' : 'welcome'));
+  const [page, setPage] = useState<Page>(() =>
+    localStorage.getItem("vidyamitra-auth") ? "home" : "home",
+  );
+  const [screen, setScreen] = useState<
+    "welcome" | "login" | "onboarding" | "app"
+  >(() => (localStorage.getItem("vidyamitra-auth") ? "app" : "welcome"));
   const [toast, setToast] = useState<Toast | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [mobileNav, setMobileNav] = useState(false);
   const [onboardStep, setOnboardStep] = useState(1);
   const [onboardClass, setOnboardClass] = useState(data.selectedClass);
-  const [onboardLanguage, setOnboardLanguage] = useState<Language>(data.selectedLanguage);
-  const [onboardStyle, setOnboardStyle] = useState<Style>(data.selectedLearningStyle);
+  const [onboardLanguage, setOnboardLanguage] = useState<Language>(
+    data.selectedLanguage,
+  );
+  const [onboardStyle, setOnboardStyle] = useState<Style>(
+    data.selectedLearningStyle,
+  );
   const [building, setBuilding] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [resetOpen, setResetOpen] = useState(false);
 
-  useEffect(() => { localStorage.setItem('vidyamitra-demo', JSON.stringify(data)); }, [data]);
-  useEffect(() => { if (toast) { const t = window.setTimeout(() => setToast(null), 2800); return () => window.clearTimeout(t); } }, [toast]);
+  useEffect(() => {
+    localStorage.setItem("vidyamitra-demo", JSON.stringify(data));
+  }, [data]);
+  useEffect(() => {
+    if (toast) {
+      const t = window.setTimeout(() => setToast(null), 2800);
+      return () => window.clearTimeout(t);
+    }
+  }, [toast]);
   const showToast = (message: string) => setToast({ id: Date.now(), message });
-  const go = (next: Page) => { setPage(next); setMobileNav(false); };
-  const updateData = (patch: Partial<AppData>) => setData(prev => ({ ...prev, ...patch }));
+  const go = (next: Page) => {
+    setPage(next);
+    setMobileNav(false);
+  };
+  const updateData = (patch: Partial<AppData>) =>
+    setData((prev) => ({ ...prev, ...patch }));
 
-  const enterApp = () => { localStorage.setItem('vidyamitra-auth', 'true'); setScreen('app'); };
-  const startOnboarding = () => { setScreen('onboarding'); setOnboardStep(1); };
-  const buildPath = () => { setBuilding(true); window.setTimeout(() => { updateData({ selectedClass: onboardClass, selectedLanguage: onboardLanguage, selectedLearningStyle: onboardStyle }); setBuilding(false); enterApp(); go('home'); showToast('Learning path updated'); }, 1200); };
-  const logout = () => { localStorage.removeItem('vidyamitra-auth'); setScreen('login'); setPage('home'); showToast('You have been logged out'); };
-  const resetDemo = () => { setData(initialData); setResetOpen(false); showToast('Demo progress reset'); };
+  const enterApp = () => {
+    localStorage.setItem("vidyamitra-auth", "true");
+    setScreen("app");
+  };
+  const startOnboarding = () => {
+    setScreen("onboarding");
+    setOnboardStep(1);
+  };
+  const buildPath = () => {
+    setBuilding(true);
+    window.setTimeout(() => {
+      updateData({
+        selectedClass: onboardClass,
+        selectedLanguage: onboardLanguage,
+        selectedLearningStyle: onboardStyle,
+      });
+      setBuilding(false);
+      enterApp();
+      go("home");
+      showToast("Learning path updated");
+    }, 1200);
+  };
+  const logout = () => {
+    localStorage.removeItem("vidyamitra-auth");
+    setScreen("login");
+    setPage("home");
+    showToast("You have been logged out");
+  };
+  const resetDemo = () => {
+    setData(initialData);
+    setResetOpen(false);
+    showToast("Demo progress reset");
+  };
 
-  if (screen === 'welcome') return <Welcome onStart={() => setScreen('login')} />;
-  if (screen === 'login') return <Login mode={authMode} setMode={setAuthMode} onDemo={enterApp} onContinue={startOnboarding} />;
-  if (screen === 'onboarding') return <Onboarding step={onboardStep} setStep={setOnboardStep} selectedClass={onboardClass} setClass={setOnboardClass} language={onboardLanguage} setLanguage={setOnboardLanguage} style={onboardStyle} setStyle={setOnboardStyle} building={building} onBuild={buildPath} />;
+  if (screen === "welcome")
+    return <Welcome onStart={() => setScreen("login")} />;
+  if (screen === "login")
+    return (
+      <Login
+        mode={authMode}
+        setMode={setAuthMode}
+        onDemo={enterApp}
+        onContinue={startOnboarding}
+      />
+    );
+  if (screen === "onboarding")
+    return (
+      <Onboarding
+        step={onboardStep}
+        setStep={setOnboardStep}
+        selectedClass={onboardClass}
+        setClass={setOnboardClass}
+        language={onboardLanguage}
+        setLanguage={setOnboardLanguage}
+        style={onboardStyle}
+        setStyle={setOnboardStyle}
+        building={building}
+        onBuild={buildPath}
+      />
+    );
 
-  return <div className="app-shell">
-    <Sidebar page={page} go={go} mobileNav={mobileNav} close={() => setMobileNav(false)} logout={logout} />
-    <main className="main-content">
-      <header className="topbar"><button className="icon-btn menu-btn" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu size={21} /></button><div className="crumb"><span>Vidyamitra</span><ChevronRight size={14} /><strong>{nav.find(item => item.id === page)?.label}</strong></div><div className="top-actions"><button className="icon-btn" onClick={() => showToast('You are all caught up')} aria-label="Notifications"><Bell size={19} /><i /></button><div className="avatar">D</div><div className="profile-name"><strong>Deeksha</strong><small>Class {data.selectedClass.replace('th', '')}</small></div></div></header>
-      <div className="page-wrap">{page === 'home' && <Dashboard data={data} go={go} topicClick={setSelectedTopic} />}{page === 'path' && <LearningPath topicClick={setSelectedTopic} go={go} />}{page === 'gaps' && <Gaps go={go} topicClick={setSelectedTopic} />}{page === 'practice' && <Practice data={data} updateData={updateData} go={go} showToast={showToast} />}{page === 'tutor' && <Tutor language={data.selectedLanguage} updateData={updateData} showToast={showToast} />}{page === 'revision' && <Revision data={data} updateData={updateData} showToast={showToast} />}{page === 'progress' && <Progress data={data} />}{page === 'settings' && <Settings data={data} updateData={updateData} logout={logout} resetOpen={resetOpen} setResetOpen={setResetOpen} resetDemo={resetDemo} showToast={showToast} />}</div>
-    </main>
-    {selectedTopic && <TopicModal topic={selectedTopic} close={() => setSelectedTopic(null)} go={go} />}
-    {toast && <div className="toast"><Check size={17} />{toast.message}</div>}
-  </div>;
+  return (
+    <div className="app-shell">
+      <Sidebar
+        page={page}
+        go={go}
+        mobileNav={mobileNav}
+        close={() => setMobileNav(false)}
+        logout={logout}
+      />
+      <main className="main-content">
+        <header className="topbar">
+          <button
+            className="icon-btn menu-btn"
+            onClick={() => setMobileNav(true)}
+            aria-label="Open menu"
+          >
+            <Menu size={21} />
+          </button>
+          <div className="crumb">
+            <span>Vidyamitra</span>
+            <ChevronRight size={14} />
+            <strong>{nav.find((item) => item.id === page)?.label}</strong>
+          </div>
+          <div className="top-actions">
+            <button
+              className="icon-btn"
+              onClick={() => showToast("You are all caught up")}
+              aria-label="Notifications"
+            >
+              <Bell size={19} />
+              <i />
+            </button>
+            <div className="avatar">D</div>
+            <div className="profile-name">
+              <strong>Deeksha</strong>
+              <small>Class {data.selectedClass.replace("th", "")}</small>
+            </div>
+          </div>
+        </header>
+        <div className="page-wrap">
+          {page === "home" && (
+            <Dashboard data={data} go={go} topicClick={setSelectedTopic} />
+          )}
+          {page === "path" && (
+            <LearningPath topicClick={setSelectedTopic} go={go} />
+          )}
+          {page === "gaps" && <Gaps go={go} topicClick={setSelectedTopic} />}
+          {page === "practice" && (
+            <Practice
+              data={data}
+              updateData={updateData}
+              go={go}
+              showToast={showToast}
+            />
+          )}
+          {page === "tutor" && (
+            <Tutor
+              language={data.selectedLanguage}
+              updateData={updateData}
+              showToast={showToast}
+            />
+          )}
+          {page === "revision" && (
+            <Revision
+              data={data}
+              updateData={updateData}
+              showToast={showToast}
+            />
+          )}
+          {page === "progress" && <Progress data={data} />}
+          {page === "settings" && (
+            <Settings
+              data={data}
+              updateData={updateData}
+              logout={logout}
+              resetOpen={resetOpen}
+              setResetOpen={setResetOpen}
+              resetDemo={resetDemo}
+              showToast={showToast}
+            />
+          )}
+        </div>
+      </main>
+      {selectedTopic && (
+        <TopicModal
+          topic={selectedTopic}
+          close={() => setSelectedTopic(null)}
+          go={go}
+        />
+      )}
+      {toast && (
+        <div className="toast">
+          <Check size={17} />
+          {toast.message}
+        </div>
+      )}
+    </div>
+  );
 }
 
-function Logo({ dark = false }: { dark?: boolean }) { return <div className={`brand ${dark ? 'brand-dark' : ''}`}><img src="/assets/images/download.png" alt="Vidyamitra" /><div><strong>VIDHYAMITRA</strong><small>Education for all</small></div></div>; }
-function Welcome({ onStart }: { onStart: () => void }) { return <div className="welcome"><div className="welcome-glow" /><header className="welcome-nav"><Logo dark /><span className="mini-label">AI-powered learning for Classes 8–12</span></header><div className="welcome-grid"><section className="welcome-copy"><div className="eyebrow"><Sparkles size={15} /> PERSONALIZED LEARNING, REIMAGINED</div><h1>Learn your way.<br /><em>Master every concept.</em></h1><p>Vidyamitra understands how you learn, finds what is holding you back, and builds the next best step — automatically.</p><div className="welcome-buttons"><button className="primary-btn" onClick={onStart}>Get started <ArrowRight size={18} /></button><button className="ghost-btn light" onClick={onStart}>I already have an account</button></div><div className="class-row"><span>Made for</span><b>8</b><b>9</b><b className="selected">10</b><b>11</b><b>12</b></div></section><section className="welcome-visual"><div className="orb"><BrainCircuit size={70} /></div><div className="visual-card card-one"><div className="tiny-icon teal"><TrendingUp size={16} /></div><div><small>Overall mastery</small><strong>74% <span>+8.2%</span></strong></div></div><div className="visual-card card-two"><div className="tiny-icon amber"><Lightbulb size={16} /></div><div><small>Next best step</small><strong>Practice Discriminant</strong></div><ArrowRight size={16} /></div><div className="path-lines"><span /><span /><span /><span /></div><div className="visual-label">Your learning path<br /><small>adapts with every answer</small></div></section></div><div className="welcome-features">{['Adaptive learning', 'Multilingual AI', 'Smart revision', 'Gap detection', 'Concept mapping', 'Mistake memory'].map((item, i) => <span key={item}><Check size={14} />{item}</span>)}</div></div>; }
+function Logo({ dark = false }: { dark?: boolean }) {
+  return (
+    <div className={`brand ${dark ? "brand-dark" : ""}`}>
+      <img src="/assets/images/download.png" alt="Vidyamitra" />
+      <div>
+        <strong>VIDHYAMITRA</strong>
+        <small>Education for all</small>
+      </div>
+    </div>
+  );
+}
+function Welcome({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="welcome">
+      <div className="welcome-glow" />
+      <header className="welcome-nav">
+        <Logo dark />
+        <span className="mini-label">AI-powered learning for Classes 8–12</span>
+      </header>
+      <div className="welcome-grid">
+        <section className="welcome-copy">
+          <div className="eyebrow">
+            <Sparkles size={15} /> PERSONALIZED LEARNING, REIMAGINED
+          </div>
+          <h1>
+            Learn your way.
+            <br />
+            <em>Master every concept.</em>
+          </h1>
+          <p>
+            Vidyamitra understands how you learn, finds what is holding you
+            back, and builds the next best step — automatically.
+          </p>
+          <div className="welcome-buttons">
+            <button className="primary-btn" onClick={onStart}>
+              Get started <ArrowRight size={18} />
+            </button>
+            <button className="ghost-btn light" onClick={onStart}>
+              I already have an account
+            </button>
+          </div>
+          <div className="class-row">
+            <span>Made for</span>
+            <b>8</b>
+            <b>9</b>
+            <b className="selected">10</b>
+            <b>11</b>
+            <b>12</b>
+          </div>
+        </section>
+        <section className="welcome-visual">
+          <div className="orb">
+            <BrainCircuit size={70} />
+          </div>
+          <div className="visual-card card-one">
+            <div className="tiny-icon teal">
+              <TrendingUp size={16} />
+            </div>
+            <div>
+              <small>Overall mastery</small>
+              <strong>
+                74% <span>+8.2%</span>
+              </strong>
+            </div>
+          </div>
+          <div className="visual-card card-two">
+            <div className="tiny-icon amber">
+              <Lightbulb size={16} />
+            </div>
+            <div>
+              <small>Next best step</small>
+              <strong>Practice Discriminant</strong>
+            </div>
+            <ArrowRight size={16} />
+          </div>
+          <div className="path-lines">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="visual-label">
+            Your learning path
+            <br />
+            <small>adapts with every answer</small>
+          </div>
+        </section>
+      </div>
+      <div className="welcome-features">
+        {[
+          "Adaptive learning",
+          "Multilingual AI",
+          "Smart revision",
+          "Gap detection",
+          "Concept mapping",
+          "Mistake memory",
+        ].map((item, i) => (
+          <span key={item}>
+            <Check size={14} />
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-function Login({ mode, setMode, onDemo, onContinue }: { mode: 'login' | 'signup'; setMode: (m: 'login' | 'signup') => void; onDemo: () => void; onContinue: () => void }) { return <div className="auth-page"><div className="auth-visual"><Logo dark /><div className="auth-quote"><div className="quote-mark">“</div><h2>Smart learning.<br /><span>Better tomorrow.</span></h2><p>A learning companion that grows with you, not ahead of you.</p></div><div className="auth-bottom"><span>01</span><div className="auth-progress"><i /></div><span>03</span></div></div><div className="auth-form"><div className="mobile-logo"><Logo /></div><div className="form-inner"><span className="eyebrow">{mode === 'login' ? 'WELCOME BACK' : 'JOIN VIDHYAMITRA'}</span><h1>{mode === 'login' ? 'Pick up where you left off.' : 'Start your learning journey.'}</h1><p className="muted">{mode === 'login' ? 'Your personalized path is waiting for you.' : 'Create a free demo account to get started.'}</p><label>Email address<input type="email" placeholder="you@example.com" defaultValue={mode === 'login' ? 'deeksha@vidyamitra.demo' : ''} /></label><label>Password<input type="password" placeholder="Enter your password" defaultValue="password" /></label><button className="primary-btn full" onClick={onContinue}>{mode === 'login' ? 'Continue' : 'Create account'} <ArrowRight size={18} /></button><div className="or"><span>or</span></div><button className="social-btn" onClick={onContinue}><span className="google-g">G</span> Continue with Google</button><button className="demo-btn" onClick={onDemo}><Zap size={17} /> Try Demo Student — Deeksha</button><p className="switch-copy">{mode === 'login' ? 'New to Vidyamitra?' : 'Already have an account?'} <button onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Create account' : 'Sign in'}</button></p></div></div></div>; }
+function Login({
+  mode,
+  setMode,
+  onDemo,
+  onContinue,
+}: {
+  mode: "login" | "signup";
+  setMode: (m: "login" | "signup") => void;
+  onDemo: () => void;
+  onContinue: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-function Onboarding({ step, setStep, selectedClass, setClass, language, setLanguage, style, setStyle, building, onBuild }: { step: number; setStep: (n: number) => void; selectedClass: string; setClass: (x: string) => void; language: Language; setLanguage: (x: Language) => void; style: Style; setStyle: (x: Style) => void; building: boolean; onBuild: () => void }) { const titles = ['Which class are you in?', 'How should Vidyamitra speak to you?', 'How do you learn best?']; return <div className="onboarding"><div className="onboard-brand"><Logo /></div><div className="onboard-inner"><div className="stepper">{[1, 2, 3].map(n => <div className={step >= n ? 'active' : ''} key={n}><span>{step > n ? <Check size={15} /> : n}</span><small>{['Class', 'Language', 'Style'][n - 1]}</small></div>)}</div><div className="onboard-content"><span className="eyebrow">LET'S PERSONALIZE YOUR LEARNING</span><h1>{titles[step - 1]}</h1><p className="muted">A few choices help us tune your learning path to you.</p>{step === 1 && <div className="choice-grid class-choice">{['8th', '9th', '10th', '11th', '12th'].map(x => <button className={selectedClass === x ? 'choice selected' : 'choice'} key={x} onClick={() => setClass(x)}><span>Class</span><strong>{x.replace('th', '')}</strong><small>{x === '10th' ? 'Board year' : 'Keep exploring'}</small></button>)}</div>}{step === 2 && <div className="choice-grid">{languages.map(x => <button className={language === x ? 'choice selected' : 'choice language-choice'} key={x} onClick={() => setLanguage(x)}><span className="language-dot">{x.slice(0, 1)}</span><strong>{x}</strong><small>{x === 'Hinglish' ? 'Best of both worlds' : `Learn in ${x}`}</small></button>)}</div>}{step === 3 && <div className="style-grid">{styles.map((x, i) => { const Icon = [BookOpen, Headphones, ImageIcon, Target, Sparkles][i]; return <button className={style === x ? 'style-card selected' : 'style-card'} key={x} onClick={() => setStyle(x)}><span><Icon size={22} /></span><strong>{x}</strong><small>{['I like to read and reflect', 'Listen and learn on the go', 'See it come to life', 'Learn by doing', 'A little bit of everything'][i]}</small></button>; })}</div>}<div className="onboard-actions">{step > 1 && <button className="text-btn" onClick={() => setStep(step - 1)}>Back</button>}{step < 3 ? <button className="primary-btn" onClick={() => setStep(step + 1)}>Continue <ArrowRight size={18} /></button> : <button className="primary-btn" onClick={onBuild} disabled={building}>{building ? 'Analyzing your preferences…' : 'Build my learning path'} <ArrowRight size={18} /></button>}</div></div></div></div>; }
+  const handleAuth = async () => {
+    setError("");
+     if (!email || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
 
-function Sidebar({ page, go, mobileNav, close, logout }: { page: Page; go: (p: Page) => void; mobileNav: boolean; close: () => void; logout: () => void }) { return <aside className={`sidebar ${mobileNav ? 'open' : ''}`}><div className="side-top"><Logo /><button className="icon-btn close-side" onClick={close}><X size={19} /></button></div><div className="student-mini"><div className="avatar large">D</div><div><strong>Deeksha Sharma</strong><small>Class 10 · Mathematics</small></div><span className="online-dot" /></div><nav>{nav.map(({ id, label, icon: Icon }) => <button className={page === id ? 'nav-item active' : 'nav-item'} key={id} onClick={() => go(id)}><Icon size={18} /><span>{label}</span>{id === 'gaps' && <b>2</b>}</button>)}</nav><div className="side-bottom"><div className="streak-mini"><Flame size={18} /><div><strong>12 day streak</strong><small>Keep it going!</small></div></div><button className="logout-btn" onClick={logout}><LogOut size={17} />Log out</button><p>Vidyamitra v1.0 · Demo mode</p></div></aside>; }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
 
-function PageTitle({ eyebrow, title, subtitle, action }: { eyebrow?: string; title: string; subtitle?: string; action?: ReactNode }) { return <div className="page-title"><div><span className="eyebrow">{eyebrow || 'YOUR LEARNING SPACE'}</span><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div>{action}</div>; }
-function StatCard({ icon: Icon, label, value, foot, tone, progress }: { icon: typeof Target; label: string; value: string; foot: string; tone: string; progress?: number }) { return <div className="stat-card"><div className={`stat-icon ${tone}`}><Icon size={18} /></div><span>{label}</span><strong>{value}</strong>{progress !== undefined && <div className="mini-progress"><i style={{ width: `${progress}%` }} /></div>}<small>{foot}</small></div>; }
-function Dashboard({ data, go, topicClick }: { data: AppData; go: (p: Page) => void; topicClick: (t: Topic) => void }) { return <><PageTitle eyebrow="FRIDAY, 14 AUGUST 2026" title="Good morning, Deeksha" subtitle="Your learning path is adapting to you." action={<button className="date-btn"><CalendarDays size={17} /> This week <ChevronRight size={15} /></button>} /><div className="stats-grid"><StatCard icon={Award} label="Overall mastery" value={`${data.mastery}%`} foot="+8% this month" tone="teal" progress={data.mastery} /><StatCard icon={Target} label="Today's progress" value="68%" foot="12 min remaining" tone="indigo" progress={68} /><StatCard icon={Flame} label="Learning streak" value="12 days" foot="Best: 18 days" tone="amber" /><StatCard icon={CircleHelp} label="Questions today" value={`${Math.min(15, 8 + data.drillScore)} / 15`} foot="Keep going" tone="blue" progress={Math.min(100, (8 + data.drillScore) / 15 * 100)} /></div><div className="dashboard-grid"><section className="continue-card"><div className="continue-top"><div><span className="eyebrow">CONTINUE LEARNING</span><h2>Quadratic<br /><em>Equations</em></h2><p>Class 10 Mathematics · Chapter 4</p></div><div className="ring" style={{ '--value': '62%' } as React.CSSProperties}><strong>62<small>%</small></strong><span>mastery</span></div></div><div className="continue-bottom"><div><small>Up next</small><strong>Discriminant</strong><span><span className="status-dot amber-dot" /> Learning gap detected</span></div><button className="light-btn" onClick={() => go('practice')}>Continue learning <ArrowRight size={17} /></button></div></section><section className="insight-card"><div className="insight-head"><div className="tiny-icon violet"><Sparkles size={17} /></div><span>AI LEARNING INSIGHT</span><span className="live-pill">LIVE</span></div><h3>We found the next best step.</h3><p>Discriminant is currently your weakest prerequisite for <strong>Applications</strong>.</p><div className="insight-path"><span>Quadratic<br />Equations</span><ChevronRight size={15} /><b>Discriminant</b><ChevronRight size={15} /><span>Applications</span></div><button className="outline-btn" onClick={() => go('gaps')}>Practice weak area <ArrowRight size={16} /></button></section></div><section className="path-section"><div className="section-heading"><div><span className="eyebrow">AUTOMATICALLY GENERATED</span><h2>Your learning path</h2></div><button className="text-btn" onClick={() => go('path')}>View full path <ArrowRight size={16} /></button></div><div className="path-track">{topics.map((topic, i) => <button className={`topic-node ${topic.note ? 'attention' : ''}`} key={topic.name} onClick={() => topicClick(topic)}><div className="node-line"><span className="node-dot">{topic.note ? <Lightbulb size={14} /> : <Check size={14} />}</span>{i < topics.length - 1 && <i />}</div><span>{topic.name}</span><strong>{topic.mastery}%</strong><small>{topic.status}</small></button>)}</div></section><section className="bottom-insights"><div className="memory-card"><div className="memory-icon"><BrainCircuit size={22} /></div><div><span className="eyebrow">MISTAKE MEMORY</span><h3>{data.mistakes} mistakes remembered</h3><p>We bring back the concepts you struggle with at the right time.</p></div><button className="icon-btn" onClick={() => go('revision')}><ArrowRight size={18} /></button></div><div className="revision-next"><div className="rev-icon"><RotateCcw size={19} /></div><div><span className="eyebrow">NEXT REVISION</span><h3>Discriminant</h3><p><Clock3 size={14} /> Today · 5 min session</p></div><button className="outline-btn" onClick={() => go('revision')}>Review now</button></div></section></>; }
+    setLoading(true);
 
-function LearningPath({ topicClick, go }: { topicClick: (t: Topic) => void; go: (p: Page) => void }) { return <><PageTitle eyebrow="YOUR PERSONALIZED PATH" title="Learn what matters next." subtitle="Vidyamitra automatically decides what you should learn next." action={<div className="path-badge"><Sparkles size={16} /> AI path active</div>} /><div className="path-hero"><div className="path-hero-copy"><span className="eyebrow">CLASS 10 · MATHEMATICS</span><h2>From foundations<br />to <em>confidence.</em></h2><p>Your path is built around the concepts that unlock the next level. Master the gap, and everything after it gets easier.</p><div className="hero-meta"><span><Target size={15} /> 5 concepts</span><span><Clock3 size={15} /> 3h 20m estimated</span><span><TrendingUp size={15} /> 74% overall</span></div></div><div className="path-progress-art"><div className="progress-orbit" /><div className="progress-core"><Sparkles size={29} /><strong>74%</strong><small>path mastery</small></div><span className="orbit-label l1">Foundation</span><span className="orbit-label l2">Your gap</span><span className="orbit-label l3">Next up</span></div></div><div className="dependency-card"><div className="section-heading"><div><span className="eyebrow">CONCEPT DEPENDENCY MAP</span><h2>Every concept connects.</h2></div><span className="legend"><i className="legend-dot green" /> Mastered <i className="legend-dot amber" /> Learning gap</span></div><div className="dependency-map">{topics.map((topic, i) => <button className={`dependency-node ${topic.note ? 'attention' : ''} ${i === 2 ? 'current' : ''}`} key={topic.name} onClick={() => topicClick(topic)}><span className="dep-number">0{i + 1}</span><div><strong>{topic.name}</strong><small>{topic.note || topic.status}</small></div><b>{topic.mastery}%</b>{i < topics.length - 1 && <div className="dep-connector"><ChevronRight size={16} /></div>}</button>)}</div><div className="map-footer"><span><Lightbulb size={17} /> <strong>Vidyamitra's recommendation:</strong> Close the Discriminant gap before moving to Applications.</span><button className="primary-btn small" onClick={() => go('practice')}>Start targeted drill <ArrowRight size={16} /></button></div></div></>; }
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
 
-function Gaps({ go, topicClick }: { go: (p: Page) => void; topicClick: (t: Topic) => void }) { return <><PageTitle eyebrow="INTELLIGENCE LAYER" title="Understand your learning gaps." subtitle="A gap is not a failure. It is the clearest path forward." /><div className="gap-layout"><div className="gap-map-card"><div className="section-heading"><div><span className="eyebrow">DEPENDENCY VIEW</span><h2>What is holding you back?</h2></div><span className="pill red-pill"><i /> 2 gaps found</span></div><div className="gap-tree"><div className="tree-root"><strong>Quadratic Equations</strong><span>62% · Developing</span></div><div className="tree-branches"><div><span className="branch-line" /><div className="tree-leaf"><Check size={15} /><span>Factorisation</span><b>82%</b></div></div><div><span className="branch-line" /><div className="tree-leaf"><Check size={15} /><span>Formula</span><b>78%</b></div></div><div><span className="branch-line" /><button className="tree-leaf gap-leaf" onClick={() => topicClick(topics[3])}><Lightbulb size={15} /><span>Discriminant</span><b>41%</b></button></div></div><div className="tree-down"><ArrowRight size={15} /><span>Applications</span><b>35%</b></div></div><div className="gap-summary"><div className="gap-pulse"><span /><span /><b>41%</b></div><div><span className="eyebrow">PRIMARY LEARNING GAP</span><h3>Discriminant</h3><p>High dependency impact · 2 concepts blocked</p></div><button className="primary-btn small" onClick={() => go('practice')}>Fix this gap <ArrowRight size={16} /></button></div></div><div className="gap-detail-card"><div className="alert-icon"><Lightbulb size={22} /></div><span className="eyebrow">LEARNING GAP DETECTED</span><h2>Discriminant</h2><p>Your recent responses show repeated mistakes in this concept. Let's turn that pattern into progress.</p><div className="detail-stats"><div><strong>41%</strong><small>Accuracy</small></div><div><strong>4</strong><small>Recent mistakes</small></div><div><strong>High</strong><small>Impact</small></div></div><div className="gap-actions"><button className="primary-btn full" onClick={() => go('practice')}>Start targeted drill <ArrowRight size={17} /></button><button className="outline-btn full" onClick={() => go('tutor')}>Explain this concept <MessageCircle size={17} /></button></div></div></div></>; }
+        if (error) throw error;
 
-function Practice({ data, updateData, go, showToast }: { data: AppData; updateData: (x: Partial<AppData>) => void; go: (p: Page) => void; showToast: (x: string) => void }) { const [answered, setAnswered] = useState<number | null>(null); const [finished, setFinished] = useState(false); const q = questions[data.drillQuestion]; const difficulty = data.drillDifficulty; const answer = (index: number) => { if (answered !== null) return; const correct = index === q.answer; setAnswered(index); updateData({ drillScore: data.drillScore + (correct ? 1 : 0), mastery: Math.min(99, data.mastery + (correct ? 2 : 1)), mistakes: data.mistakes + (correct ? 0 : 1), attempted: data.attempted + 1, drillDifficulty: correct ? (difficulty === 'Easy' ? 'Medium' : 'Hard') : difficulty }); showToast(correct ? `Mastery increased to ${Math.min(99, data.mastery + 2)}%` : 'Mistake remembered'); }; const next = () => { if (data.drillQuestion >= questions.length - 1) setFinished(true); else { updateData({ drillQuestion: data.drillQuestion + 1 }); setAnswered(null); } }; const restart = () => { updateData({ drillQuestion: 0, drillScore: 0, drillDifficulty: 'Medium' }); setAnswered(null); setFinished(false); }; if (finished) return <DrillComplete data={data} go={go} restart={restart} />; return <><PageTitle eyebrow="ADAPTIVE DRILL · MATHEMATICS" title="Targeted practice." subtitle="Questions adapt to your performance, one answer at a time." action={<div className="drill-counter"><strong>{data.drillQuestion + 1}</strong><span>/ 5 questions</span></div>} /><div className="practice-layout"><div className="question-card"><div className="question-meta"><span className="topic-tag"><Target size={14} /> Discriminant</span><span className={`difficulty ${difficulty.toLowerCase()}`}><i /> {difficulty}</span></div><div className="question-progress"><i style={{ width: `${((data.drillQuestion + 1) / 5) * 100}%` }} /></div><span className="question-number">QUESTION {String(data.drillQuestion + 1).padStart(2, '0')}</span><h2>{q.prompt}</h2><div className="answer-grid">{q.options.map((option, i) => <button className={`answer-option ${answered !== null && i === q.answer ? 'correct' : ''} ${answered === i && i !== q.answer ? 'wrong' : ''}`} key={option} onClick={() => answer(i)}><span>{String.fromCharCode(65 + i)}</span>{option}{answered !== null && i === q.answer && <Check size={18} />}</button>)}</div>{answered !== null && <div className={`answer-feedback ${answered === q.answer ? 'success' : 'error'}`}><div>{answered === q.answer ? <Check size={17} /> : <Lightbulb size={17} />}</div><div><strong>{answered === q.answer ? 'Correct!' : 'Not quite. Let’s understand why.'}</strong><p>{q.explain}</p><small>{answered === q.answer ? 'Great! Your next question will be slightly harder.' : 'Mistake remembered. We’ll revisit this concept.'}</small></div></div>}<div className="question-actions">{answered !== null && <button className="primary-btn" onClick={next}>{data.drillQuestion === 4 ? 'Finish drill' : 'Next question'} <ArrowRight size={17} /></button>}</div></div><aside className="practice-side"><div className="adaptive-card"><div className="adaptive-icon"><Zap size={19} /></div><span className="eyebrow">DYNAMIC DIFFICULTY</span><h3>We’re adapting to you.</h3><p>Answer correctly to unlock harder questions. Need a little more time? We’ll keep the challenge right here.</p><div className="difficulty-ladder"><span className="done">Easy <Check size={12} /></span><i /><span className={difficulty !== 'Easy' ? 'current' : ''}>Medium</span><i /><span className={difficulty === 'Hard' ? 'current' : ''}>Hard</span></div></div><div className="session-card"><span className="eyebrow">THIS SESSION</span><div><strong>{data.drillScore}</strong><small>correct</small></div><div><strong>{data.mistakes}</strong><small>mistakes remembered</small></div><p><RotateCcw size={14} /> Revision scheduled for tomorrow</p></div></aside></div></>; }
-function DrillComplete({ data, go, restart }: { data: AppData; go: (p: Page) => void; restart: () => void }) { return <div className="complete-wrap"><div className="complete-card"><div className="complete-confetti"><Award size={35} /></div><span className="eyebrow">DRILL COMPLETE</span><h1>That was a strong session.</h1><p>You turned practice into progress. Your path has been updated.</p><div className="complete-stats"><div><strong>{Math.round((data.drillScore / 5) * 100)}%</strong><small>Accuracy</small></div><div><strong>41%</strong><small>Previous mastery</small></div><div className="highlight"><strong>{data.mastery}%</strong><small>New mastery</small></div></div><div className="complete-next"><span><CalendarDays size={17} /> Next revision</span><strong>Tomorrow</strong><span><BrainCircuit size={17} /> Mistake memory</span><strong>Updated</strong></div><div className="complete-actions"><button className="primary-btn" onClick={() => go('progress')}>View my progress <ArrowRight size={17} /></button><button className="outline-btn" onClick={() => go('revision')}>Start revision <RotateCcw size={17} /></button><button className="text-btn" onClick={restart}>Try another drill</button></div></div></div>; }
+        if (!data.session) {
+          setError(
+            "Account created! Check your email to confirm your account, then sign in.",
+          );
+          return;
+        }
 
-function Tutor({ language, updateData, showToast }: { language: Language; updateData: (x: Partial<AppData>) => void; showToast: (x: string) => void }) { const [question, setQuestion] = useState('Explain discriminant in simple terms.'); const [response, setResponse] = useState('The discriminant is a quick way to predict the kind of solutions a quadratic equation will have. It is calculated as b² − 4ac.'); const [example, setExample] = useState(false); const [playing, setPlaying] = useState(false); const fileRef = useRef<HTMLInputElement>(null); const responses: Record<Language, string> = { English: 'The discriminant is a quick way to predict the kind of solutions a quadratic equation will have. It is calculated as b² − 4ac.', Hindi: 'विभेदक b² − 4ac हमें बताता है कि द्विघात समीकरण के मूल वास्तविक, समान या अलग-अलग होंगे।', Kannada: 'ವಿಭೇದಕವು b² − 4ac ಆಗಿದ್ದು, ವರ್ಗ ಸಮೀಕರಣದ ಮೂಲಗಳ ಸ್ವರೂಪವನ್ನು ನಮಗೆ ತಿಳಿಸುತ್ತದೆ.', Tamil: 'பாகுபாடு b² − 4ac ஒரு இருபடிச் சமன்பாட்டின் வேர்களின் தன்மையைச் சொல்கிறது.', Telugu: 'వివక్షకం b² − 4ac ద్విఘాత సమీకరణం యొక్క మూలాల స్వభావాన్ని చెబుతుంది.', Hinglish: 'Discriminant ko simple way mein samjho. Yeh hume batata hai ki quadratic equation ke roots kaise honge.' }; const setLang = (lang: Language) => { updateData({ selectedLanguage: lang }); setResponse(responses[lang]); showToast(`Language changed to ${lang}`); }; const listen = () => { setPlaying(true); if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(response)); } showToast('Playing audio'); window.setTimeout(() => setPlaying(false), 2500); }; const fileReceived = (e: ChangeEvent<HTMLInputElement>) => { if (e.target.files?.[0]) { showToast('File received. Analyzing your question…'); window.setTimeout(() => setResponse('I can see your question. Let’s break the discriminant down step by step, starting with what each term means.'), 900); } }; return <><PageTitle eyebrow="YOUR AI LEARNING COMPANION" title="Ask Vidyamitra AI." subtitle="Learn in the language and format you understand best." action={<div className="language-select"><span>Language</span><select value={language} onChange={e => setLang(e.target.value as Language)}>{languages.map(x => <option key={x}>{x}</option>)}</select></div>} /><div className="tutor-layout"><div className="tutor-main"><div className="chat-window"><div className="chat-head"><div className="ai-avatar"><Sparkles size={18} /></div><div><strong>Vidyamitra AI</strong><small><i /> Ready to help you learn</small></div><span className="secure-label"><LockKeyhole size={13} /> Private demo</span></div><div className="chat-body"><div className="user-bubble">{question}</div><div className="ai-message"><div className="ai-avatar small"><Sparkles size={14} /></div><div><p>{response}</p>{example && <div className="worked-example"><span>WORKED EXAMPLE</span><strong>For x² + 5x + 6 = 0</strong><p>D = 5² − 4(1)(6) = 25 − 24 = 1<br />Since D &gt; 0, there are two distinct real roots.</p></div>}<small>Vidyamitra · just now</small></div></div></div><div className="chat-compose"><input value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => e.key === 'Enter' && setResponse(responses[language])} placeholder="Type your question..." /><button className="send-btn" onClick={() => { setResponse(responses[language]); showToast('Question sent to Vidyamitra AI'); }}><Send size={17} /></button></div></div><div className="tutor-tools"><button onClick={() => setResponse('In simple terms: the discriminant is like a traffic light for roots. Positive means two roots, zero means one repeated root, and negative means no real roots.')}><Lightbulb size={16} /> Simplify</button><button onClick={() => setResponse(responses[language])}><Sparkles size={16} /> Translate</button><button onClick={listen} className={playing ? 'active' : ''}><Volume2 size={16} /> {playing ? 'Playing audio…' : 'Listen'}</button><button onClick={() => setExample(true)}><BookOpen size={16} /> Show example</button></div></div><aside className="tutor-side"><div className="tutor-tip"><div className="tip-top"><Sparkles size={16} /><span>LEARNING TIP</span></div><h3>Ask follow-up questions.</h3><p>Good learners don’t stop at the first answer. Ask “why”, “show me”, or “what if” to go deeper.</p><div className="suggestions"><button onClick={() => setQuestion('Why does the discriminant tell us about roots?')}>Why does it work?</button><button onClick={() => setQuestion('Show me another example.')}>Show another example</button></div></div><div className="input-card"><span className="eyebrow">MULTIMODAL INPUT</span><p>Share a question in the way that feels natural.</p><div className="input-actions"><button onClick={() => showToast('Voice input is listening…')}><Mic size={18} /><small>Voice</small></button><button onClick={() => fileRef.current?.click()}><ImageIcon size={18} /><small>Image</small></button><button onClick={() => fileRef.current?.click()}><FileText size={18} /><small>Document</small></button></div><input ref={fileRef} type="file" accept="image/*,.pdf,.doc,.docx" hidden onChange={fileReceived} /></div></aside></div></>; }
+        onContinue();
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-function Revision({ data, updateData, showToast }: { data: AppData; updateData: (x: Partial<AppData>) => void; showToast: (x: string) => void }) { const [active, setActive] = useState<string | null>(null); const [step, setStep] = useState(0); const start = (name: string) => { setActive(name); setStep(0); }; const complete = () => { updateData({ revisionQueue: data.revisionQueue.filter(x => x !== active) }); showToast('Revision completed and progress updated'); setActive(null); setStep(0); }; return <><PageTitle eyebrow="SPACED REVISION" title="Smart revision." subtitle="Revise at the right time — before you forget." action={<div className="revision-score"><RotateCcw size={17} /><strong>5</strong><span>sessions completed</span></div>} /><div className="revision-layout"><div className="revision-main"><div className="section-heading"><div><span className="eyebrow">YOUR REVISION QUEUE</span><h2>Small reviews, big recall.</h2></div><span className="queue-count">{data.revisionQueue.length} to review</span></div><div className="revision-grid">{['Discriminant', 'Quadratic Equations', 'Factorisation', 'Polynomials'].map((name, i) => <button className={`revision-card ${i < 2 ? 'today' : ''}`} key={name} onClick={() => start(name)}><div className={`revision-card-icon icon-${i}`}><RotateCcw size={18} /></div><div><strong>{name}</strong><span>{i < 2 ? 'Review today' : i === 2 ? 'Review tomorrow' : 'Review in 3 days'}</span></div><ChevronRight size={17} /></button>)}</div><div className="memory-wide"><div className="memory-visual"><BrainCircuit size={27} /><span>MEMORY<br />LOOP</span></div><div><span className="eyebrow">MISTAKE MEMORY</span><h2>{data.mistakes} mistakes remembered</h2><p>Discriminant <b>· 3 mistakes</b> &nbsp; Factorisation <b>· 1 mistake</b></p><span className="memory-quote">“We remember what you struggle with and bring it back at the right time.”</span></div></div></div><aside className="timeline-card"><span className="eyebrow">THE VIDHYAMITRA LOOP</span><h3>From stuck to <em>mastered.</em></h3><div className="timeline">{['Learned', 'Practiced', 'Mistake', 'Revisited', 'Improved', 'Mastered'].map((x, i) => <div className={i < 4 ? 'done' : ''} key={x}><span>{i < 4 ? <Check size={12} /> : i + 1}</span><small>{x}</small></div>)}</div><button className="primary-btn full" onClick={() => start('Discriminant')}>Start 5-minute revision <ArrowRight size={16} /></button></aside></div>{active && <RevisionModal name={active} step={step} setStep={setStep} close={() => setActive(null)} complete={complete} />}</>; }
-function RevisionModal({ name, step, setStep, close, complete }: { name: string; step: number; setStep: (n: number) => void; close: () => void; complete: () => void }) { return <div className="modal-backdrop"><div className="revision-modal"><button className="modal-close" onClick={close}><X size={18} /></button><span className="eyebrow">5-MINUTE REVISION · {name.toUpperCase()}</span>{step === 0 && <><div className="modal-symbol"><BookOpen size={23} /></div><h2>Let’s refresh the idea.</h2><p>The discriminant D = b² − 4ac tells us about the roots of a quadratic equation.</p><div className="formula">D = b² − 4ac</div><button className="primary-btn full" onClick={() => setStep(1)}>I’m ready for a question <ArrowRight size={17} /></button></>}{step === 1 && <><div className="modal-symbol amber-symbol"><CircleHelp size={23} /></div><h2>Quick check.</h2><p>If D = 0, what kind of roots does the equation have?</p><div className="modal-options"><button onClick={() => setStep(2)}>Two distinct roots</button><button onClick={() => setStep(2)}>Equal roots</button><button onClick={() => setStep(2)}>No real roots</button></div></>}{step === 2 && <><div className="modal-symbol success-symbol"><Check size={23} /></div><h2>Revision complete.</h2><p>Nice work. This concept has been moved further down your revision queue.</p><button className="primary-btn full" onClick={complete}>Done <Check size={17} /></button></>}</div></div>; }
+        if (error) throw error;
 
-function Progress({ data }: { data: AppData }) { return <><PageTitle eyebrow="YOUR GROWTH STORY" title="Progress that feels like progress." subtitle="See how every answer adds up over time." action={<button className="export-btn" onClick={() => window.print()}><Upload size={16} /> Export summary</button>} /><div className="progress-overview"><div className="overall-score"><span className="eyebrow">OVERALL MASTERY</span><div><strong>{data.mastery}%</strong><span><TrendingUp size={16} /> +32% improvement</span></div><p>Before Vidyamitra <b>42%</b> <i /> Current <b>{data.mastery}%</b></p></div><div className="chart-card"><div className="chart-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span></div><div className="chart"><div className="chart-grid" />{[42, 45, 51, 49, 59, 62, 60, 68, 74].map((v, i) => <div className="chart-bar" key={i}><i style={{ height: `${v}%` }} /><small>{['Jun 01', '', '', 'Jun 15', '', '', 'Jul 01', '', 'Today'][i]}</small></div>)}</div></div></div><div className="progress-grid"><div className="subject-card"><div className="section-heading"><div><span className="eyebrow">SUBJECT MASTERY</span><h2>Where you shine.</h2></div><BarChart3 size={20} /></div>{[['Mathematics', 82, 'indigo'], ['Science', 76, 'teal'], ['Computer Science', 68, 'amber'], ['English', 88, 'blue']].map(([name, val, tone]) => <div className="subject-row" key={name as string}><span>{name}</span><div className="subject-track"><i className={tone as string} style={{ width: `${val}%` }} /></div><strong>{val}%</strong></div>)}</div><div className="stat-breakdown"><span className="eyebrow">LEARNING AT A GLANCE</span><h2>The numbers behind your growth.</h2><div className="breakdown-grid">{([['Questions attempted', data.attempted, Target], ['Correct answers', 31, Check], ['Learning gaps', data.learningGaps.length, Lightbulb], ['Concepts mastered', 7, Award], ['Revision sessions', 5, RotateCcw], ['Day streak', 12, Flame]] as [string, number, typeof Target][]).map(([label, value, Icon]) => <div key={label}><Icon size={16} /><strong>{value}</strong><small>{label}</small></div>)}</div></div></div><div className="topic-breakdown"><div className="section-heading"><div><span className="eyebrow">TOPIC BREAKDOWN</span><h2>Mastery by concept.</h2></div></div><div className="topic-table">{[['Quadratic Equations', 61], ['Discriminant', data.mastery], ['Factorisation', 82], ['Polynomials', 88]].map(([name, val]) => <div key={name as string}><span>{name as string}</span><div><i style={{ width: `${val}%` }} /></div><strong>{val}%</strong><small>{Number(val) > 80 ? 'Strong' : 'Developing'}</small></div>)}</div></div></>; }
+        onContinue();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-function Settings({ data, updateData, logout, resetOpen, setResetOpen, resetDemo, showToast }: { data: AppData; updateData: (x: Partial<AppData>) => void; logout: () => void; resetOpen: boolean; setResetOpen: (x: boolean) => void; resetDemo: () => void; showToast: (x: string) => void }) { return <><PageTitle eyebrow="YOUR PREFERENCES" title="Settings." subtitle="Make Vidyamitra feel like your own." /><div className="settings-layout"><div className="settings-card"><div className="settings-section"><div><span className="eyebrow">LEARNING PROFILE</span><h2>Personalize your path.</h2></div><div className="setting-row"><div><strong>Class</strong><small>Used to tune your curriculum</small></div><select value={data.selectedClass} onChange={e => { updateData({ selectedClass: e.target.value }); showToast(`Class changed to ${e.target.value}`); }}>{['8th', '9th', '10th', '11th', '12th'].map(x => <option key={x}>{x}</option>)}</select></div><div className="setting-row"><div><strong>Preferred language</strong><small>Used by your AI tutor</small></div><select value={data.selectedLanguage} onChange={e => { const x = e.target.value as Language; updateData({ selectedLanguage: x }); showToast(`Language changed to ${x}`); }}>{languages.map(x => <option key={x}>{x}</option>)}</select></div><div className="setting-row"><div><strong>Learning style</strong><small>How should content be presented?</small></div><select value={data.selectedLearningStyle} onChange={e => { updateData({ selectedLearningStyle: e.target.value as Style }); showToast('Learning style updated'); }}>{styles.map(x => <option key={x}>{x}</option>)}</select></div></div><div className="settings-section danger-zone"><div><span className="eyebrow">DEMO CONTROLS</span><h2>Start fresh.</h2><p>Reset progress to the original Deeksha demo state.</p></div><button className="outline-danger" onClick={() => setResetOpen(true)}><RotateCcw size={16} /> Reset demo progress</button></div><div className="settings-section logout-section"><div><strong>Sign out of this device</strong><small>Your demo progress stays saved.</small></div><button className="text-btn" onClick={logout}><LogOut size={16} /> Log out</button></div></div><div className="settings-side"><div className="account-card"><div className="avatar large">D</div><h3>Deeksha Sharma</h3><p>Class {data.selectedClass} · Learner since today</p><span><Check size={14} /> Demo profile active</span></div><div className="privacy-card"><LockKeyhole size={18} /><div><strong>Your data stays yours.</strong><p>This prototype stores progress only on this device.</p></div></div></div></div>{resetOpen && <div className="modal-backdrop"><div className="confirm-modal"><div className="modal-symbol warning-symbol"><RotateCcw size={22} /></div><h2>Reset demo progress?</h2><p>This will return Deeksha's mastery, mistakes and revision queue to their starting values.</p><div><button className="outline-btn" onClick={() => setResetOpen(false)}>Keep progress</button><button className="danger-btn" onClick={resetDemo}>Reset everything</button></div></div></div>}</>; }
+  return (
+    <div className="auth-page">
+      <div className="auth-visual">
+        <Logo dark />
+        <div className="auth-quote">
+          <div className="quote-mark">“</div>
+          <h2>
+            Smart learning.
+            <br />
+            <span>Better tomorrow.</span>
+          </h2>
+          <p>
+            A learning companion that grows with you not ahead of you.
+            </p>
+            <div>
+              <div className= "auth-bottom">
+                <span>01</span>
+                <div className= "auth-progress">
+                <i/>
+                </div>
+                <span>03</span>
+                </div>
+                </div>
+              {["8th", "9th", "10th", "11th", "12th"].map((x) => (
+                <button
+                  className={selectedClass === x ? "choice selected" : "choice"}
+                  key={x}
+                  onClick={() => setClass(x)}
+                >
+                  <span>Class</span>
+                  <strong>{x.replace("th", "")}</strong>
+                  <small>
+                    {x === "10th" ? "Board year" : "Keep exploring"}
+                  </small>
+                </button>
+              ))}
+            </div>
+          { step === 2 && (
+            <div className="choice-grid">
+              {languages.map((x) => (
+                <button
+                  className={
+                    language === x
+                      ? "choice selected"
+                      : "choice language-choice"
+                  }
+                  key={x}
+                  onClick={() => setLanguage(x)}
+                >
+                  <span className="language-dot">{x.slice(0, 1)}</span>
+                  <strong>{x}</strong>
+                  <small>
+                    {x === "Hinglish" ? "Best of both worlds" : `Learn in ${x}`}
+                  </small>
+                </button>
+              ))}
+            </div>
+          )}
+          {step === 3 && (
+            <div className="style-grid">
+              {styles.map((x, i) => {
+                const Icon = [
+                  BookOpen,
+                  Headphones,
+                  ImageIcon,
+                  Target,
+                  Sparkles,
+                ][i];
+                return (
+                  <button
+                    className={
+                      style === x ? "style-card selected" : "style-card"
+                    }
+                    key={x}
+                    onClick={() => setStyle(x)}
+                  >
+                    <span>
+                      <Icon size={22} />
+                    </span>
+                    <strong>{x}</strong>
+                    <small>
+                      {
+                        [
+                          "I like to read and reflect",
+                          "Listen and learn on the go",
+                          "See it come to life",
+                          "Learn by doing",
+                          "A little bit of everything",
+                        ][i]
+                      }
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <div className="onboard-actions">
+            {step > 1 && (
+              <button className="text-btn" onClick={() => setStep(step - 1)}>
+                Back
+              </button>
+            )}
+            {step < 3 ? (
+              <button className="primary-btn" onClick={() => setStep(step + 1)}>
+                Continue <ArrowRight size={18} />
+              </button>
+            ) : (
+              <button
+                className="primary-btn"
+                onClick={onBuild}
+                disabled={building}
+              >
+                {building
+                  ? "Analyzing your preferences…"
+                  : "Build my learning path"}{" "}
+                <ArrowRight size={18} />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+function Sidebar({
+  page,
+  go,
+  mobileNav,
+  close,
+  logout,
+}: {
+  page: Page;
+  go: (p: Page) => void;
+  mobileNav: boolean;
+  close: () => void;
+  logout: () => void;
+}) {
+  return (
+    <aside className={`sidebar ${mobileNav ? "open" : ""}`}>
+      <div className="side-top">
+        <Logo />
+        <button className="icon-btn close-side" onClick={close}>
+          <X size={19} />
+        </button>
+      </div>
+      <div className="student-mini">
+        <div className="avatar large">D</div>
+        <div>
+          <strong>Deeksha Sharma</strong>
+          <small>Class 10 · Mathematics</small>
+        </div>
+        <span className="online-dot" />
+      </div>
+      <nav>
+        {nav.map(({ id, label, icon: Icon }) => (
+          <button
+            className={page === id ? "nav-item active" : "nav-item"}
+            key={id}
+            onClick={() => go(id)}
+          >
+            <Icon size={18} />
+            <span>{label}</span>
+            {id === "gaps" && <b>2</b>}
+          </button>
+        ))}
+      </nav>
+      <div className="side-bottom">
+        <div className="streak-mini">
+          <Flame size={18} />
+          <div>
+            <strong>12 day streak</strong>
+            <small>Keep it going!</small>
+          </div>
+        </div>
+        <button className="logout-btn" onClick={logout}>
+          <LogOut size={17} />
+          Log out
+        </button>
+        <p>Vidyamitra v1.0 · Demo mode</p>
+      </div>
+    </aside>
+  );
+}
 
-function TopicModal({ topic, close, go }: { topic: Topic; close: () => void; go: (p: Page) => void }) { return <div className="modal-backdrop"><div className="topic-modal"><button className="modal-close" onClick={close}><X size={18} /></button><div className={`topic-modal-icon ${topic.note ? 'attention' : ''}`}>{topic.note ? <Lightbulb size={24} /> : <Check size={24} />}</div><span className="eyebrow">CONCEPT DETAIL</span><h2>{topic.name}</h2><p className="topic-status"><i /> {topic.status}</p><div className="modal-mastery"><div><span>Mastery</span><strong>{topic.mastery}%</strong></div><div className="big-track"><i style={{ width: `${topic.mastery}%` }} /></div></div><div className="modal-detail-grid"><div><small>Recent mistakes</small><strong>{topic.note ? 4 : 0}</strong></div><div><small>Dependency impact</small><strong>{topic.note ? 'High' : 'Low'}</strong></div></div>{topic.note && <div className="recommendation"><Sparkles size={17} /><span><small>RECOMMENDED NEXT</small><strong>5-question targeted drill</strong></span></div>}<button className="primary-btn full" onClick={() => { close(); go(topic.note ? 'practice' : 'path'); }}>{topic.note ? 'Start targeted drill' : 'Explore concept'} <ArrowRight size={17} /></button></div></div>; }
+function PageTitle({
+  eyebrow,
+  title,
+  subtitle,
+  action,
+}: {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="page-title">
+      <div>
+        <span className="eyebrow">{eyebrow || "YOUR LEARNING SPACE"}</span>
+        <h1>{title}</h1>
+        {subtitle && <p>{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  foot,
+  tone,
+  progress,
+}: {
+  icon: typeof Target;
+  label: string;
+  value: string;
+  foot: string;
+  tone: string;
+  progress?: number;
+}) {
+  return (
+    <div className="stat-card">
+      <div className={`stat-icon ${tone}`}>
+        <Icon size={18} />
+      </div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {progress !== undefined && (
+        <div className="mini-progress">
+          <i style={{ width: `${progress}%` }} />
+        </div>
+      )}
+      <small>{foot}</small>
+    </div>
+  );
+}
+function Dashboard({
+  data,
+  go,
+  topicClick,
+}: {
+  data: AppData;
+  go: (p: Page) => void;
+  topicClick: (t: Topic) => void;
+}) {
+  return (
+    <>
+      <PageTitle
+        eyebrow="FRIDAY, 14 AUGUST 2026"
+        title="Good morning, Deeksha"
+        subtitle="Your learning path is adapting to you."
+        action={
+          <button className="date-btn">
+            <CalendarDays size={17} /> This week <ChevronRight size={15} />
+          </button>
+        }
+      />
+      <div className="stats-grid">
+        <StatCard
+          icon={Award}
+          label="Overall mastery"
+          value={`${data.mastery}%`}
+          foot="+8% this month"
+          tone="teal"
+          progress={data.mastery}
+        />
+        <StatCard
+          icon={Target}
+          label="Today's progress"
+          value="68%"
+          foot="12 min remaining"
+          tone="indigo"
+          progress={68}
+        />
+        <StatCard
+          icon={Flame}
+          label="Learning streak"
+          value="12 days"
+          foot="Best: 18 days"
+          tone="amber"
+        />
+        <StatCard
+          icon={CircleHelp}
+          label="Questions today"
+          value={`${Math.min(15, 8 + data.drillScore)} / 15`}
+          foot="Keep going"
+          tone="blue"
+          progress={Math.min(100, ((8 + data.drillScore) / 15) * 100)}
+        />
+      </div>
+      <div className="dashboard-grid">
+        <section className="continue-card">
+          <div className="continue-top">
+            <div>
+              <span className="eyebrow">CONTINUE LEARNING</span>
+              <h2>
+                Quadratic
+                <br />
+                <em>Equations</em>
+              </h2>
+              <p>Class 10 Mathematics · Chapter 4</p>
+            </div>
+            <div
+              className="ring"
+              style={{ "--value": "62%" } as React.CSSProperties}
+            >
+              <strong>
+                62<small>%</small>
+              </strong>
+              <span>mastery</span>
+            </div>
+          </div>
+          <div className="continue-bottom">
+            <div>
+              <small>Up next</small>
+              <strong>Discriminant</strong>
+              <span>
+                <span className="status-dot amber-dot" /> Learning gap detected
+              </span>
+            </div>
+            <button className="light-btn" onClick={() => go("practice")}>
+              Continue learning <ArrowRight size={17} />
+            </button>
+          </div>
+        </section>
+        <section className="insight-card">
+          <div className="insight-head">
+            <div className="tiny-icon violet">
+              <Sparkles size={17} />
+            </div>
+            <span>AI LEARNING INSIGHT</span>
+            <span className="live-pill">LIVE</span>
+          </div>
+          <h3>We found the next best step.</h3>
+          <p>
+            Discriminant is currently your weakest prerequisite for{" "}
+            <strong>Applications</strong>.
+          </p>
+          <div className="insight-path">
+            <span>
+              Quadratic
+              <br />
+              Equations
+            </span>
+            <ChevronRight size={15} />
+            <b>Discriminant</b>
+            <ChevronRight size={15} />
+            <span>Applications</span>
+          </div>
+          <button className="outline-btn" onClick={() => go("gaps")}>
+            Practice weak area <ArrowRight size={16} />
+          </button>
+        </section>
+      </div>
+      <section className="path-section">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">AUTOMATICALLY GENERATED</span>
+            <h2>Your learning path</h2>
+          </div>
+          <button className="text-btn" onClick={() => go("path")}>
+            View full path <ArrowRight size={16} />
+          </button>
+        </div>
+        <div className="path-track">
+          {topics.map((topic, i) => (
+            <button
+              className={`topic-node ${topic.note ? "attention" : ""}`}
+              key={topic.name}
+              onClick={() => topicClick(topic)}
+            >
+              <div className="node-line">
+                <span className="node-dot">
+                  {topic.note ? <Lightbulb size={14} /> : <Check size={14} />}
+                </span>
+                {i < topics.length - 1 && <i />}
+              </div>
+              <span>{topic.name}</span>
+              <strong>{topic.mastery}%</strong>
+              <small>{topic.status}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+      <section className="bottom-insights">
+        <div className="memory-card">
+          <div className="memory-icon">
+            <BrainCircuit size={22} />
+          </div>
+          <div>
+            <span className="eyebrow">MISTAKE MEMORY</span>
+            <h3>{data.mistakes} mistakes remembered</h3>
+            <p>
+              We bring back the concepts you struggle with at the right time.
+            </p>
+          </div>
+          <button className="icon-btn" onClick={() => go("revision")}>
+            <ArrowRight size={18} />
+          </button>
+        </div>
+        <div className="revision-next">
+          <div className="rev-icon">
+            <RotateCcw size={19} />
+          </div>
+          <div>
+            <span className="eyebrow">NEXT REVISION</span>
+            <h3>Discriminant</h3>
+            <p>
+              <Clock3 size={14} /> Today · 5 min session
+            </p>
+          </div>
+          <button className="outline-btn" onClick={() => go("revision")}>
+            Review now
+          </button>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function LearningPath({
+  topicClick,
+  go,
+}: {
+  topicClick: (t: Topic) => void;
+  go: (p: Page) => void;
+}) {
+  return (
+    <>
+      <PageTitle
+        eyebrow="YOUR PERSONALIZED PATH"
+        title="Learn what matters next."
+        subtitle="Vidyamitra automatically decides what you should learn next."
+        action={
+          <div className="path-badge">
+            <Sparkles size={16} /> AI path active
+          </div>
+        }
+      />
+      <div className="path-hero">
+        <div className="path-hero-copy">
+          <span className="eyebrow">CLASS 10 · MATHEMATICS</span>
+          <h2>
+            From foundations
+            <br />
+            to <em>confidence.</em>
+          </h2>
+          <p>
+            Your path is built around the concepts that unlock the next level.
+            Master the gap, and everything after it gets easier.
+          </p>
+          <div className="hero-meta">
+            <span>
+              <Target size={15} /> 5 concepts
+            </span>
+            <span>
+              <Clock3 size={15} /> 3h 20m estimated
+            </span>
+            <span>
+              <TrendingUp size={15} /> 74% overall
+            </span>
+          </div>
+        </div>
+        <div className="path-progress-art">
+          <div className="progress-orbit" />
+          <div className="progress-core">
+            <Sparkles size={29} />
+            <strong>74%</strong>
+            <small>path mastery</small>
+          </div>
+          <span className="orbit-label l1">Foundation</span>
+          <span className="orbit-label l2">Your gap</span>
+          <span className="orbit-label l3">Next up</span>
+        </div>
+      </div>
+      <div className="dependency-card">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">CONCEPT DEPENDENCY MAP</span>
+            <h2>Every concept connects.</h2>
+          </div>
+          <span className="legend">
+            <i className="legend-dot green" /> Mastered{" "}
+            <i className="legend-dot amber" /> Learning gap
+          </span>
+        </div>
+        <div className="dependency-map">
+          {topics.map((topic, i) => (
+            <button
+              className={`dependency-node ${topic.note ? "attention" : ""} ${i === 2 ? "current" : ""}`}
+              key={topic.name}
+              onClick={() => topicClick(topic)}
+            >
+              <span className="dep-number">0{i + 1}</span>
+              <div>
+                <strong>{topic.name}</strong>
+                <small>{topic.note || topic.status}</small>
+              </div>
+              <b>{topic.mastery}%</b>
+              {i < topics.length - 1 && (
+                <div className="dep-connector">
+                  <ChevronRight size={16} />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+        <div className="map-footer">
+          <span>
+            <Lightbulb size={17} />{" "}
+            <strong>Vidyamitra's recommendation:</strong> Close the Discriminant
+            gap before moving to Applications.
+          </span>
+          <button className="primary-btn small" onClick={() => go("practice")}>
+            Start targeted drill <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Gaps({
+  go,
+  topicClick,
+}: {
+  go: (p: Page) => void;
+  topicClick: (t: Topic) => void;
+}) {
+  return (
+    <>
+      <PageTitle
+        eyebrow="INTELLIGENCE LAYER"
+        title="Understand your learning gaps."
+        subtitle="A gap is not a failure. It is the clearest path forward."
+      />
+      <div className="gap-layout">
+        <div className="gap-map-card">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">DEPENDENCY VIEW</span>
+              <h2>What is holding you back?</h2>
+            </div>
+            <span className="pill red-pill">
+              <i /> 2 gaps found
+            </span>
+          </div>
+          <div className="gap-tree">
+            <div className="tree-root">
+              <strong>Quadratic Equations</strong>
+              <span>62% · Developing</span>
+            </div>
+            <div className="tree-branches">
+              <div>
+                <span className="branch-line" />
+                <div className="tree-leaf">
+                  <Check size={15} />
+                  <span>Factorisation</span>
+                  <b>82%</b>
+                </div>
+              </div>
+              <div>
+                <span className="branch-line" />
+                <div className="tree-leaf">
+                  <Check size={15} />
+                  <span>Formula</span>
+                  <b>78%</b>
+                </div>
+              </div>
+              <div>
+                <span className="branch-line" />
+                <button
+                  className="tree-leaf gap-leaf"
+                  onClick={() => topicClick(topics[3])}
+                >
+                  <Lightbulb size={15} />
+                  <span>Discriminant</span>
+                  <b>41%</b>
+                </button>
+              </div>
+            </div>
+            <div className="tree-down">
+              <ArrowRight size={15} />
+              <span>Applications</span>
+              <b>35%</b>
+            </div>
+          </div>
+          <div className="gap-summary">
+            <div className="gap-pulse">
+              <span />
+              <span />
+              <b>41%</b>
+            </div>
+            <div>
+              <span className="eyebrow">PRIMARY LEARNING GAP</span>
+              <h3>Discriminant</h3>
+              <p>High dependency impact · 2 concepts blocked</p>
+            </div>
+            <button
+              className="primary-btn small"
+              onClick={() => go("practice")}
+            >
+              Fix this gap <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="gap-detail-card">
+          <div className="alert-icon">
+            <Lightbulb size={22} />
+          </div>
+          <span className="eyebrow">LEARNING GAP DETECTED</span>
+          <h2>Discriminant</h2>
+          <p>
+            Your recent responses show repeated mistakes in this concept. Let's
+            turn that pattern into progress.
+          </p>
+          <div className="detail-stats">
+            <div>
+              <strong>41%</strong>
+              <small>Accuracy</small>
+            </div>
+            <div>
+              <strong>4</strong>
+              <small>Recent mistakes</small>
+            </div>
+            <div>
+              <strong>High</strong>
+              <small>Impact</small>
+            </div>
+          </div>
+          <div className="gap-actions">
+            <button className="primary-btn full" onClick={() => go("practice")}>
+              Start targeted drill <ArrowRight size={17} />
+            </button>
+            <button className="outline-btn full" onClick={() => go("tutor")}>
+              Explain this concept <MessageCircle size={17} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Practice({
+  data,
+  updateData,
+  go,
+  showToast,
+}: {
+  data: AppData;
+  updateData: (x: Partial<AppData>) => void;
+  go: (p: Page) => void;
+  showToast: (x: string) => void;
+}) {
+  const [answered, setAnswered] = useState<number | null>(null);
+  const [finished, setFinished] = useState(false);
+  const q = questions[data.drillQuestion];
+  const difficulty = data.drillDifficulty;
+  const answer = (index: number) => {
+    if (answered !== null) return;
+    const correct = index === q.answer;
+    setAnswered(index);
+    updateData({
+      drillScore: data.drillScore + (correct ? 1 : 0),
+      mastery: Math.min(99, data.mastery + (correct ? 2 : 1)),
+      mistakes: data.mistakes + (correct ? 0 : 1),
+      attempted: data.attempted + 1,
+      drillDifficulty: correct
+        ? difficulty === "Easy"
+          ? "Medium"
+          : "Hard"
+        : difficulty,
+    });
+    showToast(
+      correct
+        ? `Mastery increased to ${Math.min(99, data.mastery + 2)}%`
+        : "Mistake remembered",
+    );
+  };
+  const next = () => {
+    if (data.drillQuestion >= questions.length - 1) setFinished(true);
+    else {
+      updateData({ drillQuestion: data.drillQuestion + 1 });
+      setAnswered(null);
+    }
+  };
+  const restart = () => {
+    updateData({ drillQuestion: 0, drillScore: 0, drillDifficulty: "Medium" });
+    setAnswered(null);
+    setFinished(false);
+  };
+  if (finished) return <DrillComplete data={data} go={go} restart={restart} />;
+  return (
+    <>
+      <PageTitle
+        eyebrow="ADAPTIVE DRILL · MATHEMATICS"
+        title="Targeted practice."
+        subtitle="Questions adapt to your performance, one answer at a time."
+        action={
+          <div className="drill-counter">
+            <strong>{data.drillQuestion + 1}</strong>
+            <span>/ 5 questions</span>
+          </div>
+        }
+      />
+      <div className="practice-layout">
+        <div className="question-card">
+          <div className="question-meta">
+            <span className="topic-tag">
+              <Target size={14} /> Discriminant
+            </span>
+            <span className={`difficulty ${difficulty.toLowerCase()}`}>
+              <i /> {difficulty}
+            </span>
+          </div>
+          <div className="question-progress">
+            <i style={{ width: `${((data.drillQuestion + 1) / 5) * 100}%` }} />
+          </div>
+          <span className="question-number">
+            QUESTION {String(data.drillQuestion + 1).padStart(2, "0")}
+          </span>
+          <h2>{q.prompt}</h2>
+          <div className="answer-grid">
+            {q.options.map((option, i) => (
+              <button
+                className={`answer-option ${answered !== null && i === q.answer ? "correct" : ""} ${answered === i && i !== q.answer ? "wrong" : ""}`}
+                key={option}
+                onClick={() => answer(i)}
+              >
+                <span>{String.fromCharCode(65 + i)}</span>
+                {option}
+                {answered !== null && i === q.answer && <Check size={18} />}
+              </button>
+            ))}
+          </div>
+          {answered !== null && (
+            <div
+              className={`answer-feedback ${answered === q.answer ? "success" : "error"}`}
+            >
+              <div>
+                {answered === q.answer ? (
+                  <Check size={17} />
+                ) : (
+                  <Lightbulb size={17} />
+                )}
+              </div>
+              <div>
+                <strong>
+                  {answered === q.answer
+                    ? "Correct!"
+                    : "Not quite. Let’s understand why."}
+                </strong>
+                <p>{q.explain}</p>
+                <small>
+                  {answered === q.answer
+                    ? "Great! Your next question will be slightly harder."
+                    : "Mistake remembered. We’ll revisit this concept."}
+                </small>
+              </div>
+            </div>
+          )}
+          <div className="question-actions">
+            {answered !== null && (
+              <button className="primary-btn" onClick={next}>
+                {data.drillQuestion === 4 ? "Finish drill" : "Next question"}{" "}
+                <ArrowRight size={17} />
+              </button>
+            )}
+          </div>
+        </div>
+        <aside className="practice-side">
+          <div className="adaptive-card">
+            <div className="adaptive-icon">
+              <Zap size={19} />
+            </div>
+            <span className="eyebrow">DYNAMIC DIFFICULTY</span>
+            <h3>We’re adapting to you.</h3>
+            <p>
+              Answer correctly to unlock harder questions. Need a little more
+              time? We’ll keep the challenge right here.
+            </p>
+            <div className="difficulty-ladder">
+              <span className="done">
+                Easy <Check size={12} />
+              </span>
+              <i />
+              <span className={difficulty !== "Easy" ? "current" : ""}>
+                Medium
+              </span>
+              <i />
+              <span className={difficulty === "Hard" ? "current" : ""}>
+                Hard
+              </span>
+            </div>
+          </div>
+          <div className="session-card">
+            <span className="eyebrow">THIS SESSION</span>
+            <div>
+              <strong>{data.drillScore}</strong>
+              <small>correct</small>
+            </div>
+            <div>
+              <strong>{data.mistakes}</strong>
+              <small>mistakes remembered</small>
+            </div>
+            <p>
+              <RotateCcw size={14} /> Revision scheduled for tomorrow
+            </p>
+          </div>
+        </aside>
+      </div>
+    </>
+  );
+}
+function DrillComplete({
+  data,
+  go,
+  restart,
+}: {
+  data: AppData;
+  go: (p: Page) => void;
+  restart: () => void;
+}) {
+  return (
+    <div className="complete-wrap">
+      <div className="complete-card">
+        <div className="complete-confetti">
+          <Award size={35} />
+        </div>
+        <span className="eyebrow">DRILL COMPLETE</span>
+        <h1>That was a strong session.</h1>
+        <p>You turned practice into progress. Your path has been updated.</p>
+        <div className="complete-stats">
+          <div>
+            <strong>{Math.round((data.drillScore / 5) * 100)}%</strong>
+            <small>Accuracy</small>
+          </div>
+          <div>
+            <strong>41%</strong>
+            <small>Previous mastery</small>
+          </div>
+          <div className="highlight">
+            <strong>{data.mastery}%</strong>
+            <small>New mastery</small>
+          </div>
+        </div>
+        <div className="complete-next">
+          <span>
+            <CalendarDays size={17} /> Next revision
+          </span>
+          <strong>Tomorrow</strong>
+          <span>
+            <BrainCircuit size={17} /> Mistake memory
+          </span>
+          <strong>Updated</strong>
+        </div>
+        <div className="complete-actions">
+          <button className="primary-btn" onClick={() => go("progress")}>
+            View my progress <ArrowRight size={17} />
+          </button>
+          <button className="outline-btn" onClick={() => go("revision")}>
+            Start revision <RotateCcw size={17} />
+          </button>
+          <button className="text-btn" onClick={restart}>
+            Try another drill
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Tutor({
+  language,
+  updateData,
+  showToast,
+}: {
+  language: Language;
+  updateData: (x: Partial<AppData>) => void;
+  showToast: (x: string) => void;
+}) {
+  const [question, setQuestion] = useState(
+    "Explain discriminant in simple terms.",
+  );
+  const [response, setResponse] = useState(
+    "The discriminant is a quick way to predict the kind of solutions a quadratic equation will have. It is calculated as b² − 4ac.",
+  );
+  const [example, setExample] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const responses: Record<Language, string> = {
+    English:
+      "The discriminant is a quick way to predict the kind of solutions a quadratic equation will have. It is calculated as b² − 4ac.",
+    Hindi:
+      "विभेदक b² − 4ac हमें बताता है कि द्विघात समीकरण के मूल वास्तविक, समान या अलग-अलग होंगे।",
+    Kannada:
+      "ವಿಭೇದಕವು b² − 4ac ಆಗಿದ್ದು, ವರ್ಗ ಸಮೀಕರಣದ ಮೂಲಗಳ ಸ್ವರೂಪವನ್ನು ನಮಗೆ ತಿಳಿಸುತ್ತದೆ.",
+    Tamil:
+      "பாகுபாடு b² − 4ac ஒரு இருபடிச் சமன்பாட்டின் வேர்களின் தன்மையைச் சொல்கிறது.",
+    Telugu:
+      "వివక్షకం b² − 4ac ద్విఘాత సమీకరణం యొక్క మూలాల స్వభావాన్ని చెబుతుంది.",
+    Hinglish:
+      "Discriminant ko simple way mein samjho. Yeh hume batata hai ki quadratic equation ke roots kaise honge.",
+  };
+  const setLang = (lang: Language) => {
+    updateData({ selectedLanguage: lang });
+    setResponse(responses[lang]);
+    showToast(`Language changed to ${lang}`);
+  };
+  const listen = () => {
+    setPlaying(true);
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(new SpeechSynthesisUtterance(response));
+    }
+    showToast("Playing audio");
+    window.setTimeout(() => setPlaying(false), 2500);
+  };
+  const fileReceived = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      showToast("File received. Analyzing your question…");
+      window.setTimeout(
+        () =>
+          setResponse(
+            "I can see your question. Let’s break the discriminant down step by step, starting with what each term means.",
+          ),
+        900,
+      );
+    }
+  };
+  return (
+    <>
+      <PageTitle
+        eyebrow="YOUR AI LEARNING COMPANION"
+        title="Ask Vidyamitra AI."
+        subtitle="Learn in the language and format you understand best."
+        action={
+          <div className="language-select">
+            <span>Language</span>
+            <select
+              value={language}
+              onChange={(e) => setLang(e.target.value as Language)}
+            >
+              {languages.map((x) => (
+                <option key={x}>{x}</option>
+              ))}
+            </select>
+          </div>
+        }
+      />
+      <div className="tutor-layout">
+        <div className="tutor-main">
+          <div className="chat-window">
+            <div className="chat-head">
+              <div className="ai-avatar">
+                <Sparkles size={18} />
+              </div>
+              <div>
+                <strong>Vidyamitra AI</strong>
+                <small>
+                  <i /> Ready to help you learn
+                </small>
+              </div>
+              <span className="secure-label">
+                <LockKeyhole size={13} /> Private demo
+              </span>
+            </div>
+            <div className="chat-body">
+              <div className="user-bubble">{question}</div>
+              <div className="ai-message">
+                <div className="ai-avatar small">
+                  <Sparkles size={14} />
+                </div>
+                <div>
+                  <p>{response}</p>
+                  {example && (
+                    <div className="worked-example">
+                      <span>WORKED EXAMPLE</span>
+                      <strong>For x² + 5x + 6 = 0</strong>
+                      <p>
+                        D = 5² − 4(1)(6) = 25 − 24 = 1<br />
+                        Since D &gt; 0, there are two distinct real roots.
+                      </p>
+                    </div>
+                  )}
+                  <small>Vidyamitra · just now</small>
+                </div>
+              </div>
+            </div>
+            <div className="chat-compose">
+              <input
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && setResponse(responses[language])
+                }
+                placeholder="Type your question..."
+              />
+              <button
+                className="send-btn"
+                onClick={() => {
+                  setResponse(responses[language]);
+                  showToast("Question sent to Vidyamitra AI");
+                }}
+              >
+                <Send size={17} />
+              </button>
+            </div>
+          </div>
+          <div className="tutor-tools">
+            <button
+              onClick={() =>
+                setResponse(
+                  "In simple terms: the discriminant is like a traffic light for roots. Positive means two roots, zero means one repeated root, and negative means no real roots.",
+                )
+              }
+            >
+              <Lightbulb size={16} /> Simplify
+            </button>
+            <button onClick={() => setResponse(responses[language])}>
+              <Sparkles size={16} /> Translate
+            </button>
+            <button onClick={listen} className={playing ? "active" : ""}>
+              <Volume2 size={16} /> {playing ? "Playing audio…" : "Listen"}
+            </button>
+            <button onClick={() => setExample(true)}>
+              <BookOpen size={16} /> Show example
+            </button>
+          </div>
+        </div>
+        <aside className="tutor-side">
+          <div className="tutor-tip">
+            <div className="tip-top">
+              <Sparkles size={16} />
+              <span>LEARNING TIP</span>
+            </div>
+            <h3>Ask follow-up questions.</h3>
+            <p>
+              Good learners don’t stop at the first answer. Ask “why”, “show
+              me”, or “what if” to go deeper.
+            </p>
+            <div className="suggestions">
+              <button
+                onClick={() =>
+                  setQuestion("Why does the discriminant tell us about roots?")
+                }
+              >
+                Why does it work?
+              </button>
+              <button onClick={() => setQuestion("Show me another example.")}>
+                Show another example
+              </button>
+            </div>
+          </div>
+          <div className="input-card">
+            <span className="eyebrow">MULTIMODAL INPUT</span>
+            <p>Share a question in the way that feels natural.</p>
+            <div className="input-actions">
+              <button onClick={() => showToast("Voice input is listening…")}>
+                <Mic size={18} />
+                <small>Voice</small>
+              </button>
+              <button onClick={() => fileRef.current?.click()}>
+                <ImageIcon size={18} />
+                <small>Image</small>
+              </button>
+              <button onClick={() => fileRef.current?.click()}>
+                <FileText size={18} />
+                <small>Document</small>
+              </button>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,.pdf,.doc,.docx"
+              hidden
+              onChange={fileReceived}
+            />
+          </div>
+        </aside>
+      </div>
+    </>
+  );
+}
+
+function Revision({
+  data,
+  updateData,
+  showToast,
+}: {
+  data: AppData;
+  updateData: (x: Partial<AppData>) => void;
+  showToast: (x: string) => void;
+}) {
+  const [active, setActive] = useState<string | null>(null);
+  const [step, setStep] = useState(0);
+  const start = (name: string) => {
+    setActive(name);
+    setStep(0);
+  };
+  const complete = () => {
+    updateData({
+      revisionQueue: data.revisionQueue.filter((x) => x !== active),
+    });
+    showToast("Revision completed and progress updated");
+    setActive(null);
+    setStep(0);
+  };
+  return (
+    <>
+      <PageTitle
+        eyebrow="SPACED REVISION"
+        title="Smart revision."
+        subtitle="Revise at the right time — before you forget."
+        action={
+          <div className="revision-score">
+            <RotateCcw size={17} />
+            <strong>5</strong>
+            <span>sessions completed</span>
+          </div>
+        }
+      />
+      <div className="revision-layout">
+        <div className="revision-main">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">YOUR REVISION QUEUE</span>
+              <h2>Small reviews, big recall.</h2>
+            </div>
+            <span className="queue-count">
+              {data.revisionQueue.length} to review
+            </span>
+          </div>
+          <div className="revision-grid">
+            {[
+              "Discriminant",
+              "Quadratic Equations",
+              "Factorisation",
+              "Polynomials",
+            ].map((name, i) => (
+              <button
+                className={`revision-card ${i < 2 ? "today" : ""}`}
+                key={name}
+                onClick={() => start(name)}
+              >
+                <div className={`revision-card-icon icon-${i}`}>
+                  <RotateCcw size={18} />
+                </div>
+                <div>
+                  <strong>{name}</strong>
+                  <span>
+                    {i < 2
+                      ? "Review today"
+                      : i === 2
+                        ? "Review tomorrow"
+                        : "Review in 3 days"}
+                  </span>
+                </div>
+                <ChevronRight size={17} />
+              </button>
+            ))}
+          </div>
+          <div className="memory-wide">
+            <div className="memory-visual">
+              <BrainCircuit size={27} />
+              <span>
+                MEMORY
+                <br />
+                LOOP
+              </span>
+            </div>
+            <div>
+              <span className="eyebrow">MISTAKE MEMORY</span>
+              <h2>{data.mistakes} mistakes remembered</h2>
+              <p>
+                Discriminant <b>· 3 mistakes</b> &nbsp; Factorisation{" "}
+                <b>· 1 mistake</b>
+              </p>
+              <span className="memory-quote">
+                “We remember what you struggle with and bring it back at the
+                right time.”
+              </span>
+            </div>
+          </div>
+        </div>
+        <aside className="timeline-card">
+          <span className="eyebrow">THE VIDHYAMITRA LOOP</span>
+          <h3>
+            From stuck to <em>mastered.</em>
+          </h3>
+          <div className="timeline">
+            {[
+              "Learned",
+              "Practiced",
+              "Mistake",
+              "Revisited",
+              "Improved",
+              "Mastered",
+            ].map((x, i) => (
+              <div className={i < 4 ? "done" : ""} key={x}>
+                <span>{i < 4 ? <Check size={12} /> : i + 1}</span>
+                <small>{x}</small>
+              </div>
+            ))}
+          </div>
+          <button
+            className="primary-btn full"
+            onClick={() => start("Discriminant")}
+          >
+            Start 5-minute revision <ArrowRight size={16} />
+          </button>
+        </aside>
+      </div>
+      {active && (
+        <RevisionModal
+          name={active}
+          step={step}
+          setStep={setStep}
+          close={() => setActive(null)}
+          complete={complete}
+        />
+      )}
+    </>
+  );
+}
+function RevisionModal({
+  name,
+  step,
+  setStep,
+  close,
+  complete,
+}: {
+  name: string;
+  step: number;
+  setStep: (n: number) => void;
+  close: () => void;
+  complete: () => void;
+}) {
+  return (
+    <div className="modal-backdrop">
+      <div className="revision-modal">
+        <button className="modal-close" onClick={close}>
+          <X size={18} />
+        </button>
+        <span className="eyebrow">
+          5-MINUTE REVISION · {name.toUpperCase()}
+        </span>
+        {step === 0 && (
+          <>
+            <div className="modal-symbol">
+              <BookOpen size={23} />
+            </div>
+            <h2>Let’s refresh the idea.</h2>
+            <p>
+              The discriminant D = b² − 4ac tells us about the roots of a
+              quadratic equation.
+            </p>
+            <div className="formula">D = b² − 4ac</div>
+            <button className="primary-btn full" onClick={() => setStep(1)}>
+              I’m ready for a question <ArrowRight size={17} />
+            </button>
+          </>
+        )}
+        {step === 1 && (
+          <>
+            <div className="modal-symbol amber-symbol">
+              <CircleHelp size={23} />
+            </div>
+            <h2>Quick check.</h2>
+            <p>If D = 0, what kind of roots does the equation have?</p>
+            <div className="modal-options">
+              <button onClick={() => setStep(2)}>Two distinct roots</button>
+              <button onClick={() => setStep(2)}>Equal roots</button>
+              <button onClick={() => setStep(2)}>No real roots</button>
+            </div>
+          </>
+        )}
+        {step === 2 && (
+          <>
+            <div className="modal-symbol success-symbol">
+              <Check size={23} />
+            </div>
+            <h2>Revision complete.</h2>
+            <p>
+              Nice work. This concept has been moved further down your revision
+              queue.
+            </p>
+            <button className="primary-btn full" onClick={complete}>
+              Done <Check size={17} />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Progress({ data }: { data: AppData }) {
+  return (
+    <>
+      <PageTitle
+        eyebrow="YOUR GROWTH STORY"
+        title="Progress that feels like progress."
+        subtitle="See how every answer adds up over time."
+        action={
+          <button className="export-btn" onClick={() => window.print()}>
+            <Upload size={16} /> Export summary
+          </button>
+        }
+      />
+      <div className="progress-overview">
+        <div className="overall-score">
+          <span className="eyebrow">OVERALL MASTERY</span>
+          <div>
+            <strong>{data.mastery}%</strong>
+            <span>
+              <TrendingUp size={16} /> +32% improvement
+            </span>
+          </div>
+          <p>
+            Before Vidyamitra <b>42%</b> <i /> Current <b>{data.mastery}%</b>
+          </p>
+        </div>
+        <div className="chart-card">
+          <div className="chart-labels">
+            <span>100%</span>
+            <span>75%</span>
+            <span>50%</span>
+            <span>25%</span>
+          </div>
+          <div className="chart">
+            <div className="chart-grid" />
+            {[42, 45, 51, 49, 59, 62, 60, 68, 74].map((v, i) => (
+              <div className="chart-bar" key={i}>
+                <i style={{ height: `${v}%` }} />
+                <small>
+                  {
+                    ["Jun 01", "", "", "Jun 15", "", "", "Jul 01", "", "Today"][
+                      i
+                    ]
+                  }
+                </small>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="progress-grid">
+        <div className="subject-card">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">SUBJECT MASTERY</span>
+              <h2>Where you shine.</h2>
+            </div>
+            <BarChart3 size={20} />
+          </div>
+          {[
+            ["Mathematics", 82, "indigo"],
+            ["Science", 76, "teal"],
+            ["Computer Science", 68, "amber"],
+            ["English", 88, "blue"],
+          ].map(([name, val, tone]) => (
+            <div className="subject-row" key={name as string}>
+              <span>{name}</span>
+              <div className="subject-track">
+                <i className={tone as string} style={{ width: `${val}%` }} />
+              </div>
+              <strong>{val}%</strong>
+            </div>
+          ))}
+        </div>
+        <div className="stat-breakdown">
+          <span className="eyebrow">LEARNING AT A GLANCE</span>
+          <h2>The numbers behind your growth.</h2>
+          <div className="breakdown-grid">
+            {(
+              [
+                ["Questions attempted", data.attempted, Target],
+                ["Correct answers", 31, Check],
+                ["Learning gaps", data.learningGaps.length, Lightbulb],
+                ["Concepts mastered", 7, Award],
+                ["Revision sessions", 5, RotateCcw],
+                ["Day streak", 12, Flame],
+              ] as [string, number, typeof Target][]
+            ).map(([label, value, Icon]) => (
+              <div key={label}>
+                <Icon size={16} />
+                <strong>{value}</strong>
+                <small>{label}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="topic-breakdown">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">TOPIC BREAKDOWN</span>
+            <h2>Mastery by concept.</h2>
+          </div>
+        </div>
+        <div className="topic-table">
+          {[
+            ["Quadratic Equations", 61],
+            ["Discriminant", data.mastery],
+            ["Factorisation", 82],
+            ["Polynomials", 88],
+          ].map(([name, val]) => (
+            <div key={name as string}>
+              <span>{name as string}</span>
+              <div>
+                <i style={{ width: `${val}%` }} />
+              </div>
+              <strong>{val}%</strong>
+              <small>{Number(val) > 80 ? "Strong" : "Developing"}</small>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Settings({
+  data,
+  updateData,
+  logout,
+  resetOpen,
+  setResetOpen,
+  resetDemo,
+  showToast,
+}: {
+  data: AppData;
+  updateData: (x: Partial<AppData>) => void;
+  logout: () => void;
+  resetOpen: boolean;
+  setResetOpen: (x: boolean) => void;
+  resetDemo: () => void;
+  showToast: (x: string) => void;
+}) {
+  return (
+    <>
+      <PageTitle
+        eyebrow="YOUR PREFERENCES"
+        title="Settings."
+        subtitle="Make Vidyamitra feel like your own."
+      />
+      <div className="settings-layout">
+        <div className="settings-card">
+          <div className="settings-section">
+            <div>
+              <span className="eyebrow">LEARNING PROFILE</span>
+              <h2>Personalize your path.</h2>
+            </div>
+            <div className="setting-row">
+              <div>
+                <strong>Class</strong>
+                <small>Used to tune your curriculum</small>
+              </div>
+              <select
+                value={data.selectedClass}
+                onChange={(e) => {
+                  updateData({ selectedClass: e.target.value });
+                  showToast(`Class changed to ${e.target.value}`);
+                }}
+              >
+                {["8th", "9th", "10th", "11th", "12th"].map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+            </div>
+            <div className="setting-row">
+              <div>
+                <strong>Preferred language</strong>
+                <small>Used by your AI tutor</small>
+              </div>
+              <select
+                value={data.selectedLanguage}
+                onChange={(e) => {
+                  const x = e.target.value as Language;
+                  updateData({ selectedLanguage: x });
+                  showToast(`Language changed to ${x}`);
+                }}
+              >
+                {languages.map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+            </div>
+            <div className="setting-row">
+              <div>
+                <strong>Learning style</strong>
+                <small>How should content be presented?</small>
+              </div>
+              <select
+                value={data.selectedLearningStyle}
+                onChange={(e) => {
+                  updateData({
+                    selectedLearningStyle: e.target.value as Style,
+                  });
+                  showToast("Learning style updated");
+                }}
+              >
+                {styles.map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="settings-section danger-zone">
+            <div>
+              <span className="eyebrow">DEMO CONTROLS</span>
+              <h2>Start fresh.</h2>
+              <p>Reset progress to the original Deeksha demo state.</p>
+            </div>
+            <button
+              className="outline-danger"
+              onClick={() => setResetOpen(true)}
+            >
+              <RotateCcw size={16} /> Reset demo progress
+            </button>
+          </div>
+          <div className="settings-section logout-section">
+            <div>
+              <strong>Sign out of this device</strong>
+              <small>Your demo progress stays saved.</small>
+            </div>
+            <button className="text-btn" onClick={logout}>
+              <LogOut size={16} /> Log out
+            </button>
+          </div>
+        </div>
+        <div className="settings-side">
+          <div className="account-card">
+            <div className="avatar large">D</div>
+            <h3>Deeksha Sharma</h3>
+            <p>Class {data.selectedClass} · Learner since today</p>
+            <span>
+              <Check size={14} /> Demo profile active
+            </span>
+          </div>
+          <div className="privacy-card">
+            <LockKeyhole size={18} />
+            <div>
+              <strong>Your data stays yours.</strong>
+              <p>This prototype stores progress only on this device.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {resetOpen && (
+        <div className="modal-backdrop">
+          <div className="confirm-modal">
+            <div className="modal-symbol warning-symbol">
+              <RotateCcw size={22} />
+            </div>
+            <h2>Reset demo progress?</h2>
+            <p>
+              This will return Deeksha's mastery, mistakes and revision queue to
+              their starting values.
+            </p>
+            <div>
+              <button
+                className="outline-btn"
+                onClick={() => setResetOpen(false)}
+              >
+                Keep progress
+              </button>
+              <button className="danger-btn" onClick={resetDemo}>
+                Reset everything
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function TopicModal({
+  topic,
+  close,
+  go,
+}: {
+  topic: Topic;
+  close: () => void;
+  go: (p: Page) => void;
+}) {
+  return (
+    <div className="modal-backdrop">
+      <div className="topic-modal">
+        <button className="modal-close" onClick={close}>
+          <X size={18} />
+        </button>
+        <div className={`topic-modal-icon ${topic.note ? "attention" : ""}`}>
+          {topic.note ? <Lightbulb size={24} /> : <Check size={24} />}
+        </div>
+        <span className="eyebrow">CONCEPT DETAIL</span>
+        <h2>{topic.name}</h2>
+        <p className="topic-status">
+          <i /> {topic.status}
+        </p>
+        <div className="modal-mastery">
+          <div>
+            <span>Mastery</span>
+            <strong>{topic.mastery}%</strong>
+          </div>
+          <div className="big-track">
+            <i style={{ width: `${topic.mastery}%` }} />
+          </div>
+        </div>
+        <div className="modal-detail-grid">
+          <div>
+            <small>Recent mistakes</small>
+            <strong>{topic.note ? 4 : 0}</strong>
+          </div>
+          <div>
+            <small>Dependency impact</small>
+            <strong>{topic.note ? "High" : "Low"}</strong>
+          </div>
+        </div>
+        {topic.note && (
+          <div className="recommendation">
+            <Sparkles size={17} />
+            <span>
+              <small>RECOMMENDED NEXT</small>
+              <strong>5-question targeted drill</strong>
+            </span>
+          </div>
+        )}
+        <button
+          className="primary-btn full"
+          onClick={() => {
+            close();
+            go(topic.note ? "practice" : "path");
+          }}
+        >
+          {topic.note ? "Start targeted drill" : "Explore concept"}{" "}
+          <ArrowRight size={17} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default App;
